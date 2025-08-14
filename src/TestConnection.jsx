@@ -15,7 +15,8 @@ export default function TestConnection() {
       if (!res.ok) throw new Error("Error en la respuesta");
       return res.json();
     })
-    .then((data) => setData(data));
+    .then((data) => setData(data))
+    .catch((err) => console.error("Error:", err));
 }, []);
 
   return (
