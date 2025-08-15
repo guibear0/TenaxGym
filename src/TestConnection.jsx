@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export default function TestConnection() {
   const [data, setData] = useState(null);
-
+/*Hola */
   useEffect(() => {
   fetch('https://tenaxgymbackend.onrender.com/api/ping', {
     method: "GET",
