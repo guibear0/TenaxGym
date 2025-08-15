@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 
 export default function TestConnection() {
   const [data, setData] = useState(null);
-/*Hola */
+
   useEffect(() => {
   fetch('https://tenaxgymbackend.onrender.com/api/ping', {
     method: "GET",
-    credentials: "include", // permite enviar cookies
+    credentials: "include", 
     headers: {
       "Content-Type": "application/json",
     },
