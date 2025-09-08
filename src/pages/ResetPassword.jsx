@@ -6,6 +6,8 @@ import PasswordInput from "../components/ui/PasswordInput";
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [code, setCode] = useState("");
+  const [email, setEmail] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [infoMsg, setInfoMsg] = useState("");
   const navigate = useNavigate();
@@ -20,10 +22,30 @@ export default function ResetPassword() {
       return;
     }
 
-    const { error } = await supabase.auth.updateUser({ password });
+    // 1. Validar código en Supabase
+    const { data: user, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("email", email)
+      .eq("reset_token", code)
+      .single();
 
-    if (error) {
-      setErrorMsg(error.message);
+    if (error || !user) {
+      setErrorMsg("Código inválido o correo incorrecto.");
+      return;
+    }
+
+    // 2. Actualizar contraseña y limpiar reset_token
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({
+        password,
+        reset_token: null,
+      })
+      .eq("email", email);
+
+    if (updateError) {
+      setErrorMsg(updateError.message);
     } else {
       setInfoMsg("Contraseña actualizada correctamente. Redirigiendo...");
       setTimeout(() => navigate("/login"), 2000);
@@ -39,6 +61,24 @@ export default function ResetPassword() {
         <h1 className="text-2xl font-bold text-center">Restablecer contraseña</h1>
         {errorMsg && <p className="text-red-500">{errorMsg}</p>}
         {infoMsg && <p className="text-green-600">{infoMsg}</p>}
+
+        <input
+          type="email"
+          placeholder="Tu correo"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="border px-4 py-2 rounded"
+        />
+
+        <input
+          type="text"
+          placeholder="Código recibido"
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          required
+          className="border px-4 py-2 rounded"
+        />
 
         <PasswordInput
           value={password}

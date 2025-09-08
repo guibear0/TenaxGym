@@ -1,5 +1,19 @@
 import { useState } from "react";
-import emailjs from '@emailjs/browser';
+import emailjs from "@emailjs/browser";
+import { supabase } from "../lib/supabase";
+
+function generateResetCode() {
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  let code = "";
+  for (let i = 0; i < 3; i++) {
+    code += letters.charAt(Math.floor(Math.random() * letters.length));
+  }
+  for (let i = 0; i < 3; i++) {
+    code += numbers.charAt(Math.floor(Math.random() * numbers.length));
+  }
+  return code;
+}
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -9,29 +23,35 @@ export default function ForgotPassword() {
     e.preventDefault();
     setMsg("");
 
-    if (!email) {
-      setMsg("❌ Por favor ingresa un correo válido.");
-      return;
-    }
-
     try {
-      const resetLink = `https://tenax-gym.vercel.app/reset-password?email=${encodeURIComponent(email)}`;
+      // 1. Generar código
+      const resetCode = generateResetCode();
 
-      const result = await emailjs.send(
-        "service_ntzqsbc",    // tu Service ID
-        "template_qadxe77",   // tu Template ID
+      // 2. Guardar en Supabase en el usuario
+      const { error } = await supabase
+        .from("profiles")
+        .update({ reset_token: resetCode })
+        .eq("email", email);
+
+      if (error) {
+        setMsg("❌ Error guardando código en BD: " + error.message);
+        return;
+      }
+
+      // 3. Enviar correo con el código
+      await emailjs.send(
+        "service_ntzqsbc", // tu Service ID
+        "template_qadxe77", // tu Template ID
         {
-          email: email,  // debe coincidir con la variable de la plantilla
-          reset_link: resetLink,
+          email: email,
+          reset_code: resetCode, // debe coincidir con variable de plantilla
         },
-        "iZi8bO391P5WcW5I9"  // tu Public Key
+        "iZi8bO391P5WcW5I9" // tu Public Key
       );
 
-      console.log("EmailJS result:", result);
-      setMsg("✅ Correo de recuperación enviado. Revisa tu bandeja.");
+      setMsg("✅ Código de recuperación enviado a tu correo.");
     } catch (err) {
-      console.error("EmailJS error:", err);
-      setMsg("❌ Error al enviar. Revisa la consola para más detalles.");
+      setMsg("❌ Error: " + err.message);
     }
   };
 
@@ -52,7 +72,7 @@ export default function ForgotPassword() {
           className="border px-4 py-2 rounded"
         />
         <button className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-          Enviar correo de recuperación
+          Enviar código
         </button>
       </form>
     </div>
