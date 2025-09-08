@@ -6,48 +6,21 @@ export default function ForgotPassword() {
 
   const handleRecover = async (e) => {
     e.preventDefault();
-    setMsg("");
+    setMsg("Enviando...");
 
     try {
-      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      const res = await fetch("/api/send-reset-email", {
         method: "POST",
-        headers: {
-          accept: "application/json",
-          "content-type": "application/json",
-          "api-key": "", 
-        },
-        body: JSON.stringify({
-          sender: {
-            name: "Tenax Gym",
-            email: "tenaxgym@gmail.com", // debe estar verificado en Brevo
-          },
-          to: [
-            {
-              email: email,
-              name: "Usuario Tenax", // puedes meter dinámico si tienes nombre
-            },
-          ],
-          subject: "Recupera tu contraseña - Tenax Gym",
-          htmlContent: `
-            <html>
-              <body>
-                <h2>Recuperación de contraseña</h2>
-                <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-                <a href="http://localhost:5173/reset-password?email=${email}">
-                  Resetear contraseña
-                </a>
-              </body>
-            </html>
-          `,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
       });
 
       const data = await res.json();
 
-      if (res.status === 201) {
+      if (res.ok) {
         setMsg("✅ Correo de recuperación enviado.");
       } else {
-        setMsg("❌ Error al enviar: " + JSON.stringify(data));
+        setMsg("❌ Error al enviar: " + (data.error || "Inténtalo más tarde."));
       }
     } catch (err) {
       setMsg("❌ Error: " + err.message);
