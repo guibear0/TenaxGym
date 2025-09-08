@@ -13,7 +13,6 @@ export default function ResetPassword() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Tomamos el email desde la navegación si viene
   useEffect(() => {
     if (location.state?.email) {
       setEmail(location.state.email);
@@ -43,24 +42,32 @@ export default function ResetPassword() {
       return;
     }
 
-    // 2. Actualizar contraseña y limpiar reset_token
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({
-        password,
-        reset_token: null,
-      })
-      .eq("email", email);
+    try {
+      // 2. Hashear la contraseña usando bcrypt
+      const bcrypt = await import("bcryptjs");
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-    if (updateError) {
-      setErrorMsg(updateError.message);
-    } else {
-      setInfoMsg("Contraseña actualizada correctamente. Redirigiendo...");
+      // 3. Actualizar contraseña y limpiar reset_token
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          password: hashedPassword,
+          reset_token: null,
+        })
+        .eq("email", email);
 
-      // Aquí podemos simular login automático, por ejemplo guardando en localStorage
-      localStorage.setItem("user_email", email); // depende de cómo manejes login
+      if (updateError) {
+        setErrorMsg(updateError.message);
+      } else {
+        setInfoMsg("Contraseña actualizada correctamente. Redirigiendo...");
 
-      setTimeout(() => navigate("/dashboard"), 2000);
+        // Login simulado (guardamos profile)
+        localStorage.setItem("userProfile", JSON.stringify(user));
+
+        setTimeout(() => navigate("/dashboard"), 2000);
+      }
+    } catch (err) {
+      setErrorMsg("Error al actualizar contraseña: " + err.message);
     }
   };
 
