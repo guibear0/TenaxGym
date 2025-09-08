@@ -21,7 +21,7 @@ export default function ForgotPassword() {
         "service_ntzqsbc",    // tu Service ID
         "template_qadxe77",   // tu Template ID
         {
-          to_email: email,  // debe coincidir con la variable de la plantilla
+          to_email: {email},  // debe coincidir con la variable de la plantilla
           reset_link: resetLink,
         },
         "iZi8bO391P5WcW5I9"  // tu Public Key
