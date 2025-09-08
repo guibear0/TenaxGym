@@ -1,4 +1,5 @@
 import { useState } from "react";
+import emailjs from "emailjs-com";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -6,24 +7,27 @@ export default function ForgotPassword() {
 
   const handleRecover = async (e) => {
     e.preventDefault();
-    setMsg("Enviando...");
+    setMsg("");
 
     try {
-      const res = await fetch("/api/send-reset-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      // Aquí generas el link para resetear contraseña
+      const resetLink = `https://tenax-gym.vercel.app/reset-password?email=${encodeURIComponent(email)}`;
 
-      const data = await res.json();
+      const result = await emailjs.send(
+        "service_ntzqsbc",   
+        "template_qadxe77",  
+        {
+          to_email: email,
+          reset_link: resetLink,
+        },
+        "iZi8bO391P5WcW5I9"     // ⬅️ tu Public Key de EmailJS
+      );
 
-      if (res.ok) {
-        setMsg("✅ Correo de recuperación enviado.");
-      } else {
-        setMsg("❌ Error al enviar: " + (data.error || "Inténtalo más tarde."));
-      }
+      console.log("EmailJS result:", result);
+      setMsg("✅ Correo de recuperación enviado. Revisa tu bandeja.");
     } catch (err) {
-      setMsg("❌ Error: " + err.message);
+      console.error("EmailJS error:", err);
+      setMsg("❌ Error al enviar: " + err.text);
     }
   };
 
