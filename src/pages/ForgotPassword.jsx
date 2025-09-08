@@ -9,25 +9,29 @@ export default function ForgotPassword() {
     e.preventDefault();
     setMsg("");
 
+    if (!email) {
+      setMsg("❌ Por favor ingresa un correo válido.");
+      return;
+    }
+
     try {
-      // Aquí generas el link para resetear contraseña
       const resetLink = `https://tenax-gym.vercel.app/reset-password?email=${encodeURIComponent(email)}`;
 
       const result = await emailjs.send(
-        "service_ntzqsbc",   
-        "template_qadxe77",  
+        "service_ntzqsbc",    // tu Service ID
+        "template_qadxe77",   // tu Template ID
         {
-          to_email: email,
+          recipient_email: email,  // debe coincidir con la variable de la plantilla
           reset_link: resetLink,
         },
-        "iZi8bO391P5WcW5I9"     // ⬅️ tu Public Key de EmailJS
+        "iZi8bO391P5WcW5I9"  // tu Public Key
       );
 
       console.log("EmailJS result:", result);
       setMsg("✅ Correo de recuperación enviado. Revisa tu bandeja.");
     } catch (err) {
       console.error("EmailJS error:", err);
-      setMsg("❌ Error al enviar: " + err.text);
+      setMsg("❌ Error al enviar. Revisa la consola para más detalles.");
     }
   };
 
