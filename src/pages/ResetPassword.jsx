@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import PasswordInput from "../components/ui/PasswordInput";
 
 export default function ResetPassword() {
@@ -11,6 +11,14 @@ export default function ResetPassword() {
   const [errorMsg, setErrorMsg] = useState("");
   const [infoMsg, setInfoMsg] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Tomamos el email desde la navegación si viene
+  useEffect(() => {
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    }
+  }, [location.state]);
 
   const handleReset = async (e) => {
     e.preventDefault();
@@ -48,7 +56,11 @@ export default function ResetPassword() {
       setErrorMsg(updateError.message);
     } else {
       setInfoMsg("Contraseña actualizada correctamente. Redirigiendo...");
-      setTimeout(() => navigate("/login"), 2000);
+
+      // Aquí podemos simular login automático, por ejemplo guardando en localStorage
+      localStorage.setItem("user_email", email); // depende de cómo manejes login
+
+      setTimeout(() => navigate("/dashboard"), 2000);
     }
   };
 

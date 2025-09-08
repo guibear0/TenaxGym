@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "../lib/supabase";
 
@@ -18,6 +19,7 @@ function generateResetCode() {
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
+  const navigate = useNavigate();
 
   const handleRecover = async (e) => {
     e.preventDefault();
@@ -40,16 +42,22 @@ export default function ForgotPassword() {
 
       // 3. Enviar correo con el código
       await emailjs.send(
-        "service_ntzqsbc", // tu Service ID
-        "template_qadxe77", // tu Template ID
+        "service_ntzqsbc",
+        "template_qadxe77",
         {
           email: email,
-          reset_code: resetCode, // debe coincidir con variable de plantilla
+          reset_code: resetCode,
         },
-        "iZi8bO391P5WcW5I9" // tu Public Key
+        "iZi8bO391P5WcW5I9"
       );
 
-      setMsg("✅ Código de recuperación enviado a tu correo.");
+      setMsg("✅ Código de recuperación enviado a tu correo. Redirigiendo...");
+
+      // 4. Esperar 3.5 segundos y redirigir a reset password con correo
+      setTimeout(() => {
+        navigate("/reset-password", { state: { email } });
+      }, 3500);
+
     } catch (err) {
       setMsg("❌ Error: " + err.message);
     }
