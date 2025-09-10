@@ -5,7 +5,7 @@ import { Pencil, LogOut } from "lucide-react";
 import bcrypt from "bcryptjs";
 import PasswordInput from "../components/ui/PasswordInput";
 
-export default function Dashboard() {
+export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");

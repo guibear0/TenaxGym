@@ -34,7 +34,15 @@ export default function Login() {
 
       // Guardar perfil y redirigir
       localStorage.setItem("userProfile", JSON.stringify(data));
-      navigate("/dashboard");
+
+
+      // Después
+      if (data.is_trainer) {
+        navigate("/trainer-dashboard");
+      } else {
+        navigate("/client-dashboard");
+      }
+
     } catch (err) {
       setErrorMsg(err.message);
     }
