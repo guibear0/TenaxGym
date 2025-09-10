@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import { Pencil, LogOut } from "lucide-react";
+import { Pencil } from "lucide-react";
 import bcrypt from "bcryptjs";
 import PasswordInput from "../components/ui/PasswordInput";
+import BackButton from "../components/ui/BackButton";
+
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
@@ -62,23 +64,12 @@ export default function Profile() {
     if (error) {
       setErrorMsg("Error al actualizar: " + error.message);
     } else {
-      // Actualizamos el profile en memoria
       const newProfile = { ...profile, [field]: updatedValue };
-
-      // 🔥 Si la field era password, limpiamos el campo para no mostrar el hash
-      if (field === "password") {
-        newProfile.password = "";
-      }
-
+      if (field === "password") newProfile.password = ""; // no guardamos hash en local
       setProfile(newProfile);
       localStorage.setItem("userProfile", JSON.stringify(newProfile));
       setEditingField(null);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("userProfile");
-    navigate("/login");
   };
 
   if (!profile) return <p className="text-center mt-20">Cargando...</p>;
@@ -122,13 +113,13 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex flex-col items-center p-8 gap-6 bg-gray-50">
+      {/* Header con BackButton y Logout */}
       <div className="flex justify-between w-full max-w-md items-center">
+        <BackButton label="Atrás" />
         <h1 className="text-2xl font-bold">Tu Perfil</h1>
-        <button onClick={handleLogout} className="bg-blue-600 p-2 rounded-full">
-          <LogOut className="w-5 h-5 text-white" />
-        </button>
       </div>
 
+      {/* Info del perfil */}
       <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md flex flex-col gap-4">
         {errorMsg && <p className="text-red-500">{errorMsg}</p>}
         {renderField("Nombre", "name")}
