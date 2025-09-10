@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+:root {
+  --gunmetal: #1f2937;
+  --seasalt: #f9fafb;
+  --alice-blue: #dbeafe;
+  --mint: #10b981;
+  --pumpkin: #f97316;
+}
