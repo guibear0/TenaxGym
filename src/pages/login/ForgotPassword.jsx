@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import emailjs from "@emailjs/browser";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 function generateResetCode() {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -26,10 +26,22 @@ export default function ForgotPassword() {
     setMsg("");
 
     try {
-      // 1. Generar código
+      // 1. Primero verificar si el correo existe en la base de datos
+      const { data: user, error: checkError } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .eq("email", email)
+        .single();
+
+      if (checkError || !user) {
+        setMsg("❌ El correo electrónico no está registrado en nuestro sistema.");
+        return;
+      }
+
+      // 2 Generar código
       const resetCode = generateResetCode();
 
-      // 2. Guardar en Supabase en el usuario
+      // 3. Guardar en Supabase en el usuario
       const { error } = await supabase
         .from("profiles")
         .update({ reset_token: resetCode })
@@ -40,7 +52,7 @@ export default function ForgotPassword() {
         return;
       }
 
-      // 3. Enviar correo con el código
+      // 4 Enviar correo con el código
       await emailjs.send(
         "service_ntzqsbc",
         "template_qadxe77",
@@ -53,7 +65,7 @@ export default function ForgotPassword() {
 
       setMsg("✅ Código de recuperación enviado a tu correo. Redirigiendo...");
 
-      // 4. Esperar 3.5 segundos y redirigir a reset password con correo
+      // 5 Esperar 3.5 segundos y redirigir a reset password con correo
       setTimeout(() => {
         navigate("/reset-password", { state: { email } });
       }, 3500);

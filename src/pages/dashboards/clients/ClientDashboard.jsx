@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Activity, Calendar } from "lucide-react";
-import CardBox from "../components/ui/CardBox";
+import CardBox from "../../../components/ui/CardBox";
 
 export default function ClientDashboard() {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ export default function ClientDashboard() {
     {
       title: "Entrenamiento",
       icon: <Activity size={48} />,
-      onClick: () => console.log("Entrenamiento clicked"),
+      onClick: () => navigate("/day-selector"),
     },
     {
       title: "Calendario",
@@ -33,7 +33,7 @@ export default function ClientDashboard() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-blue-100 p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <h1 className="text-3xl font-bold text-center mb-10 text-blue-800">
         Esta es tu página de cliente{userName ? `, ${userName}` : ""}
       </h1>

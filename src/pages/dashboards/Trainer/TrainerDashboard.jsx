@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Activity, Calendar, UserCog  } from "lucide-react";
-import CardBox from "../components/ui/CardBox";
+import CardBox from "../../../components/ui/CardBox";
 
 export default function TrainerDashboard() {
    const navigate = useNavigate();
@@ -21,16 +21,6 @@ export default function TrainerDashboard() {
       onClick: () => navigate("/profile"),
     },
     {
-      title: "Entrenamiento",
-      icon: <Activity size={48} />,
-      onClick: () => console.log("Entrenamiento clicked"),
-    },
-    {
-      title: "Calendario",
-      icon: <Calendar size={48} />,
-      onClick: () => console.log("Calendario clicked"),
-    },
-    {
       title: "Clientes",
       icon: <UserCog size={48} />,
       onClick: () => navigate("/clients"),
@@ -38,7 +28,7 @@ export default function TrainerDashboard() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-blue-100 p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <h1 className="text-3xl font-bold text-center mb-10 text-blue-800">
         Esta es tu página de entrenador{userName ? `, ${userName}` : ""}
       </h1>

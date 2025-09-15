@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 import { useNavigate, useLocation } from "react-router-dom";
-import PasswordInput from "../components/ui/PasswordInput";
+import PasswordInput from "../../components/ui/PasswordInput";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -64,7 +64,9 @@ export default function ResetPassword() {
         // Login simulado (guardamos profile)
         localStorage.setItem("userProfile", JSON.stringify(user));
 
-        setTimeout(() => navigate("/dashboard"), 2000);
+        // Redirigir según el tipo de usuario
+        const redirectPath = user.is_trainer ? "/trainer-dashboard" : "/client-dashboard";
+        setTimeout(() => navigate(redirectPath), 2000);
       }
     } catch (err) {
       setErrorMsg("Error al actualizar contraseña: " + err.message);

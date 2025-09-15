@@ -1,12 +1,16 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ClientDashboard from "./pages/ClientDashboard";
-import TrainerDashboard from "./pages/TrainerDashboard";
+import Login from "./pages/login/Login";
+import Register from "./pages/login/Register";
+import ClientDashboard from "./pages/dashboards/clients/ClientDashboard";
+import TrainerDashboard from "./pages/dashboards/Trainer/TrainerDashboard";
 import Profile from "./pages/Profile";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+import ForgotPassword from "./pages/login/ForgotPassword";
+import ResetPassword from "./pages/login/ResetPassword";
 import Home from "./pages/Home";
+import Clients from "./pages/dashboards/Trainer/Clients"; 
+import DaySelector from "./pages/dashboards/clients/DaySelector";
+import ExercisesAdmin from "./pages/dashboards/Trainer/ExercisesAdmin";
+
 
 function App() {
   return (
@@ -20,8 +24,12 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/clients" element={<Clients />} />
+        <Route path="/day-selector" element={<DaySelector/>} />
+        <Route path="/exercises-admin" element={<ExercisesAdmin />} />
       </Routes>
     </BrowserRouter>
+    
   );
 }
 
