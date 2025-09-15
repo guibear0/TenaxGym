@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { Clock, Repeat, RotateCcw, StickyNote, Trash2, Edit2 } from "lucide-react";
 import {toast,Toaster} from "react-hot-toast";
+import ExerciseCatalog from "../../../components/Catalog";
 
 export default function ClientExercisesAdmin({ clientId: propClientId }) {
   const [clients, setClients] = useState([]);
@@ -12,7 +13,9 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
   const [catalog, setCatalog] = useState([]);
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(false);
+  //eslint-disable-next-line
   const [loadingCatalog, setLoadingCatalog] = useState(false);
+  const [clientName, setClientName] = useState("");
   //eslint-disable-next-line
   const [error, setError] = useState("");
   const [showAddForm, setShowAddForm] = useState(null);
@@ -47,23 +50,39 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
   }, [propClientId]);
 
   // === catálogo ===
-  useEffect(() => {
-    const fetchCatalog = async () => {
-      setLoadingCatalog(true);
-      try {
-        const { data, error } = await supabase
-          .from("catalogo_ejercicios")
-          .select("id, nombre, tipo");
-        if (error) throw error;
-        setCatalog(data || []);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoadingCatalog(false);
-      }
-    };
-    fetchCatalog();
-  }, []);
+useEffect(() => {
+  const fetchCatalog = async () => {
+    setLoadingCatalog(true);
+    try {
+      const { data, error } = await supabase
+        .from("catalogo_ejercicios")
+        .select("id, nombre, tipo");
+      if (error) throw error;
+
+      // Define the desired order for tipo
+      const tipoOrder = {
+        calentamiento: 1,
+        fuerza: 2,
+        estabilidad: 3,
+        cardio: 4,
+      };
+
+      // Sort the catalog based on tipoOrder
+      const sortedCatalog = data.sort((a, b) => {
+        const orderA = tipoOrder[a.tipo.toLowerCase()] || 999; // Fallback for unknown types
+        const orderB = tipoOrder[b.tipo.toLowerCase()] || 999;
+        return orderA - orderB;
+      });
+
+      setCatalog(sortedCatalog || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoadingCatalog(false);
+    }
+  };
+  fetchCatalog();
+}, []);
 
   // === ejercicios cliente ===
   useEffect(() => {
@@ -150,6 +169,28 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
   ));
 };
 
+// Cuando cambia el cliente, guardamos su nombre
+  useEffect(() => {
+  if (!clientId || clients.length === 0) return;
+  const selected = clients.find((c) => c.id_cliente === clientId);
+  setClientName(selected ? selected.profiles.name : "");
+}, [clientId, clients]);
+ 
+useEffect(() => {
+  if (!propClientId) return;
+  const fetchSingleClient = async () => {
+    const { data, error } = await supabase
+      .from("clientes")
+      .select("id_cliente, profiles(name)")
+      .eq("id_cliente", propClientId)
+      .single();
+    if (!error && data) {
+      setClients([data]);       // Guarda el cliente en el array
+      setClientName(data.profiles.name); // Guarda su nombre
+    }
+  };
+  fetchSingleClient();
+}, [propClientId]);
 
   const startEdit = (exercise) => {
     setEditing(exercise.id);
@@ -171,6 +212,7 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
       refreshExercises();
     }
   };
+  
 
   return (
     <div className="flex gap-6 max-w-6xl mx-auto p-6">
@@ -193,8 +235,15 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
 
       {/* === Panel principal === */}
       <div className="flex-1">
-        <h2 className="text-2xl font-bold mb-4">Gestión de ejercicios</h2>
-
+         <h2 className="text-2xl font-bold mb-4">
+          Gestión de ejercicios
+          {clientName && (
+            <span className="text-blue-600 font-semibold">
+              {" "}
+              - {clientName}
+            </span>
+          )}
+        </h2>
         {!propClientId && (
           <div className="mb-4">
             <label className="block font-medium mb-1">Selecciona cliente</label>
@@ -338,93 +387,14 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
             )}
 
             {/* Catálogo */}
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-2">Añadir del catálogo</h3>
-              {loadingCatalog ? (
-                <p>Cargando catálogo...</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {catalog.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      whileHover={{ scale: 1.02 }}
-                      className="border rounded p-3 bg-white shadow-sm"
-                    >
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">{item.nombre}</p>
-                          <p className="text-sm text-gray-500">{item.tipo}</p>
-                        </div>
-                        <button
-                          className="bg-blue-600 text-white px-3 py-1 rounded"
-                          onClick={() =>
-                            showAddForm === item.id
-                              ? setShowAddForm(null)
-                              : handleAddClick(item.id)
-                          }
-                        >
-                          {showAddForm === item.id ? "Cerrar" : "Añadir"}
-                        </button>
-                      </div>
-                      {showAddForm === item.id && (
-                        <div className="mt-3 space-y-2">
-                          <input
-                            placeholder="Reps"
-                            className="border p-1 rounded w-full"
-                            value={formValues.n_reps}
-                            onChange={(e) =>
-                              setFormValues({
-                                ...formValues,
-                                n_reps: e.target.value,
-                              })
-                            }
-                          />
-                          <input
-                            placeholder="Duración"
-                            className="border p-1 rounded w-full"
-                            value={formValues.duracion}
-                            onChange={(e) =>
-                              setFormValues({
-                                ...formValues,
-                                duracion: e.target.value,
-                              })
-                            }
-                          />
-                          <input
-                            placeholder="Descanso"
-                            className="border p-1 rounded w-full"
-                            value={formValues.descanso}
-                            onChange={(e) =>
-                              setFormValues({
-                                ...formValues,
-                                descanso: e.target.value,
-                              })
-                            }
-                          />
-                          <input
-                            placeholder="Descripción"
-                            className="border p-1 rounded w-full"
-                            value={formValues.descripcion}
-                            onChange={(e) =>
-                              setFormValues({
-                                ...formValues,
-                                descripcion: e.target.value,
-                              })
-                            }
-                          />
-                          <button
-                            onClick={() => addExercise(item.id)}
-                            className="bg-green-600 text-white px-3 py-1 rounded"
-                          >
-                            Guardar
-                          </button>
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  <ExerciseCatalog
+        catalog={catalog}
+        showAddForm={showAddForm}
+        handleAddClick={handleAddClick}
+        formValues={formValues}
+        setFormValues={setFormValues}
+        addExercise={addExercise}
+      />
           </>
         )}
       </div>
