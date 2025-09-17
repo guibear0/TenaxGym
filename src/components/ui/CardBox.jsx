@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 export default function CardBox({ title, icon, description, onClick, bgColor, hoverColor }) {
   const cardVariants = {
-    hover: { scale: 1.08, rotate: 2, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.2)" },
+    hover: { scale: 1.05, rotate: 2, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.2)" },
     rest: { scale: 1, rotate: 0, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" },
     tap: { scale: 0.95 },
   };

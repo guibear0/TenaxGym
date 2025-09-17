@@ -38,17 +38,17 @@ export default function TrainerDashboard() {
 
   const cards = [
     {
-      title: "Profile",
+      title: "Perfil",
       icon: <User size={48} />,
-      description: "Manage your trainer profile and settings",
+      description: "Visualiza y edita la información de tu perfil",
       onClick: () => navigate("/profile"),
       bgColor: "bg-blue-600",
       hoverColor: "hover:bg-blue-700",
     },
     {
-      title: "Clients",
+      title: "Clientes",
       icon: <UserCog size={48} />,
-      description: "View and manage your clients' plans",
+      description: "Visualiza y gestiona los entrenamientos de tus clientes",
       onClick: () => navigate("/clients"),
       bgColor: "bg-teal-600",
       hoverColor: "hover:bg-teal-700",

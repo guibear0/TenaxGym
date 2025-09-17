@@ -40,17 +40,17 @@ export default function ClientDashboard() {
 
   const cards = [
     {
-      title: "Profile",
+      title: "Perfil",
       icon: <User size={48} />,
-      description: "View and edit your personal information",
+      description: "Visualiza y edita la información de tu perfil",
       onClick: () => navigate("/profile"),
       bgColor: "bg-blue-600",
       hoverColor: "hover:bg-blue-700",
     },
     {
-      title: "Workouts",
+      title: "Ejercicios",
       icon: <Activity size={48} />,
-      description: "Access your daily training plans",
+      description: "Accede a tus entrenamientos diarios",
       onClick: () => navigate("/day-selector"),
       bgColor: "bg-green-600",
       hoverColor: "hover:bg-green-700",
