@@ -74,11 +74,11 @@ export default function ClientExercises({ day }) {
   const order = ["Calentamiento", "Fuerza", "Estabilidad", "Cardio"];
 
   const iconGuide = [
-    { icon: Repeat, label: "Repetitions", color: "text-yellow-500" },
-    { icon: Clock, label: "Duration", color: "text-green-500" },
-    { icon: RotateCcw, label: "Rest", color: "text-purple-500" },
-    { icon: StickyNote, label: "Description", color: "text-gray-500" },
-    { icon: Info, label: "View image", color: "text-blue-400" },
+    { icon: Repeat, label: "Repeticiones", color: "text-yellow-500" },
+    { icon: Clock, label: "Duración", color: "text-green-500" },
+    { icon: RotateCcw, label: "Descanso", color: "text-purple-500" },
+    { icon: StickyNote, label: "Descripción", color: "text-gray-500" },
+    { icon: Info, label: "Ver Imagen", color: "text-blue-400" },
   ];
 
   return (
