@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, useLocation } from "react-router-dom";
+//eslint-disable-next-line
+import { motion, AnimatePresence } from "framer-motion";
 import PasswordInput from "../../components/ui/PasswordInput";
 
 export default function ResetPassword() {
@@ -29,7 +31,6 @@ export default function ResetPassword() {
       return;
     }
 
-    // 1. Validar código en Supabase
     const { data: user, error } = await supabase
       .from("profiles")
       .select("*")
@@ -43,11 +44,9 @@ export default function ResetPassword() {
     }
 
     try {
-      // 2. Hashear la contraseña usando bcrypt
       const bcrypt = await import("bcryptjs");
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // 3. Actualizar contraseña y limpiar reset_token
       const { error: updateError } = await supabase
         .from("profiles")
         .update({
@@ -61,10 +60,8 @@ export default function ResetPassword() {
       } else {
         setInfoMsg("Contraseña actualizada correctamente. Redirigiendo...");
 
-        // Login simulado (guardamos profile)
         localStorage.setItem("userProfile", JSON.stringify(user));
 
-        // Redirigir según el tipo de usuario
         const redirectPath = user.is_trainer ? "/trainer-dashboard" : "/client-dashboard";
         setTimeout(() => navigate(redirectPath), 2000);
       }
@@ -74,48 +71,109 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-indigo-100 p-6">
-      <form
-        onSubmit={handleReset}
-        className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md flex flex-col gap-4"
+    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 px-6 py-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
       >
-        <h1 className="text-2xl font-bold text-center">Restablecer contraseña</h1>
-        {errorMsg && <p className="text-red-500">{errorMsg}</p>}
-        {infoMsg && <p className="text-green-600">{infoMsg}</p>}
-
-        <input
-          type="email"
-          placeholder="Tu correo"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="border px-4 py-2 rounded"
-        />
-
-        <input
-          type="text"
-          placeholder="Código recibido"
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          required
-          className="border px-4 py-2 rounded"
-        />
-
-        <PasswordInput
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Nueva contraseña"
-        />
-        <PasswordInput
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          placeholder="Repite la contraseña"
-        />
-
-        <button className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-          Guardar nueva contraseña
-        </button>
-      </form>
-    </div>
+        <form
+          onSubmit={handleReset}
+          className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 sm:p-8 space-y-6"
+        >
+          <h1 className="text-2xl font-bold text-center text-gray-100">
+            Restablecer contraseña
+          </h1>
+          <AnimatePresence>
+            {errorMsg && (
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="text-red-400 text-sm font-medium text-center"
+              >
+                {errorMsg}
+              </motion.p>
+            )}
+            {infoMsg && (
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="text-green-400 text-sm font-medium text-center"
+              >
+                {infoMsg}
+              </motion.p>
+            )}
+          </AnimatePresence>
+          <div>
+            <label className="block mb-2 text-sm font-semibold text-gray-100">
+              Correo electrónico
+            </label>
+            <input
+              type="email"
+              placeholder="tucorreo@correo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="bg-gray-900 border border-gray-600 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all duration-200"
+              aria-label="Email address"
+            />
+          </div>
+          <div>
+            <label className="block mb-2 text-sm font-semibold text-gray-100">
+              Código recibido
+            </label>
+            <input
+              type="text"
+              placeholder="Código recibido"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              required
+              className="bg-gray-900 border border-gray-600 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all duration-200"
+              aria-label="Reset code"
+            />
+          </div>
+          <div>
+            <label className="block mb-2 text-sm font-semibold text-gray-100">
+              Nueva contraseña
+            </label>
+            <PasswordInput
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Nueva contraseña"
+              required
+              className="bg-gray-900 border border-gray-600 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all duration-200"
+              aria-label="New password"
+            />
+          </div>
+          <div>
+            <label className="block mb-2 text-sm font-semibold text-gray-100">
+              Repite la contraseña
+            </label>
+            <PasswordInput
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Repite la contraseña"
+              required
+              className="bg-gray-900 border border-gray-600 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all duration-200"
+              aria-label="Confirm password"
+            />
+          </div>
+          <motion.button
+            type="submit"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full bg-blue-600 text-white rounded-lg border border-gray-700/50 hover:bg-blue-700 hover:border-blue-500 transition-all duration-200 p-2.5 font-semibold"
+            aria-label="Save new password"
+          >
+            Guardar nueva contraseña
+          </motion.button>
+        </form>
+      </motion.div>
+    </section>
   );
 }

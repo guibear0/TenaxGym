@@ -16,7 +16,7 @@ export default function PasswordInput({ value, onChange, placeholder = "Contrase
       <button
         type="button"
         onClick={() => setShow(!show)}
-        className="ml-2 text-gray-500"
+        className="ml-2 text-gray-500 cursor-pointer"
       >
         {show ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
       </button>

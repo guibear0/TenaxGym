@@ -1,8 +1,9 @@
+//eslint-disable-next-line
+import { motion } from "framer-motion";
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, Link } from "react-router-dom";
 import bcrypt from "bcryptjs";
-import Button from "../../components/ui/Button";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -40,69 +41,80 @@ export default function Login() {
   };
 
   return (
-    <section className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen flex items-center justify-center px-6 py-8">
-      <div className="flex flex-col items-center justify-center w-full">
-        <Link to="/" className="flex items-center mb-6 text-2xl font-semibold text-gray-900">
+    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 px-6 py-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col items-center justify-center w-full max-w-md"
+      >
+        <Link to="/" className="flex items-center mb-6 text-2xl font-semibold text-gray-100 hover:text-blue-400 transition-all duration-200">
           TENAX GYM
         </Link>
 
-        <div className="w-full bg-white rounded-lg shadow sm:max-w-md xl:p-0 dark:bg-slate-50 dark:border dark:border-gray-700">
-          <div className="p-6 space-y-4 sm:p-8">
-            <h1 className="text-xl font-bold leading-tight tracking-tight md:text-2xl text-gray-900">
-              Inicia sesión en tu cuenta
-            </h1>
+        <div className="w-full bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 sm:p-8 space-y-4">
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-100">
+            Inicia sesión en tu cuenta
+          </h1>
 
-            {errorMsg && <p className="text-red-500 text-sm font-medium">{errorMsg}</p>}
+          {errorMsg && <p className="text-red-400 text-sm font-medium">{errorMsg}</p>}
 
-            <form onSubmit={handleLogin} className="space-y-4 md:space-y-6">
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-900 ">
-                  Tu correo
-                </label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                  placeholder="tucorreo@correo.com"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 dark:text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-slate-50 dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                />
-              </div>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block mb-2 text-sm font-semibold text-gray-100">
+                Tu correo
+              </label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+                placeholder="tucorreo@correo.com"
+                className="bg-gray-900 border border-gray-600 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all duration-200"
+                aria-label="Email address"
+              />
+            </div>
 
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-900 ">
-                  Contraseña
-                </label>
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
-                  placeholder="••••••••"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 dark:text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-slate-50 dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                />
-              </div>
+            <div>
+              <label className="block mb-2 text-sm font-semibold text-gray-100">
+                Contraseña
+              </label>
+              <input
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
+                placeholder="••••••••"
+                className="bg-gray-900 border border-gray-600 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all duration-200"
+                aria-label="Password"
+              />
+            </div>
 
-              <div className="flex items-center justify-between">
-                <Link to="/forgot-password" className="text-sm font-medium text-gray-900 hover:underline">
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              </div>
+            <div className="flex items-center justify-between">
+              <Link to="/forgot-password" className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-all duration-200">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
 
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                Iniciar Sesión
-              </Button>
+            <motion.button
+              type="submit"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-full bg-blue-600 text-white rounded-lg border border-gray-700/50 hover:bg-blue-700 hover:border-blue-500 transition-all duration-200 p-2.5 font-semibold cursor-pointer"
+              aria-label="Sign in"
+            >
+              Iniciar Sesión
+            </motion.button>
 
-              <p className="text-sm font-light text-gray-900 text-center">
-                ¿No tienes cuenta aún?{" "}
-                <Link to="/register" className="font-medium text-primary-600 hover:underline">
-                  Regístrate
-                </Link>
-              </p>
-            </form>
-          </div>
+            <p className="text-sm font-light text-gray-100 text-center">
+              ¿No tienes cuenta aún?{" "}
+              <Link to="/register" className="font-medium text-blue-400 hover:text-blue-300 transition-all duration-200">
+                Regístrate
+              </Link>
+            </p>
+          </form>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

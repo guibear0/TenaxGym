@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "../../lib/supabase";
+//eslint-disable-next-line
+import { motion, AnimatePresence } from "framer-motion";
 
 function generateResetCode() {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -26,7 +28,6 @@ export default function ForgotPassword() {
     setMsg("");
 
     try {
-      // 1. Primero verificar si el correo existe en la base de datos
       const { data: user, error: checkError } = await supabase
         .from("profiles")
         .select("id, email")
@@ -38,10 +39,8 @@ export default function ForgotPassword() {
         return;
       }
 
-      // 2 Generar código
       const resetCode = generateResetCode();
 
-      // 3. Guardar en Supabase en el usuario
       const { error } = await supabase
         .from("profiles")
         .update({ reset_token: resetCode })
@@ -52,7 +51,6 @@ export default function ForgotPassword() {
         return;
       }
 
-      // 4 Enviar correo con el código
       await emailjs.send(
         "service_ntzqsbc",
         "template_qadxe77",
@@ -65,36 +63,67 @@ export default function ForgotPassword() {
 
       setMsg("✅ Código de recuperación enviado a tu correo. Redirigiendo...");
 
-      // 5 Esperar 3.5 segundos y redirigir a reset password con correo
       setTimeout(() => {
         navigate("/reset-password", { state: { email } });
       }, 3500);
-
     } catch (err) {
       setMsg("❌ Error: " + err.message);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
-      <form
-        onSubmit={handleRecover}
-        className="bg-white p-8 rounded-xl shadow-md w-full max-w-md flex flex-col gap-4"
+    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 px-6 py-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
       >
-        <h1 className="text-2xl font-bold text-center">Recuperar contraseña</h1>
-        {msg && <p className="text-red-500">{msg}</p>}
-        <input
-          type="email"
-          placeholder="Correo electrónico"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="border px-4 py-2 rounded"
-        />
-        <button className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-          Enviar código
-        </button>
-      </form>
-    </div>
+        <form
+          onSubmit={handleRecover}
+          className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 sm:p-8 space-y-6"
+        >
+          <h1 className="text-2xl font-bold text-center text-gray-100">
+            Recuperar contraseña
+          </h1>
+          <AnimatePresence>
+            {msg && (
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className={`${msg.includes("✅") ? "text-green-400" : "text-red-400"} text-sm font-medium text-center`}
+              >
+                {msg}
+              </motion.p>
+            )}
+          </AnimatePresence>
+          <div>
+            <label className="block mb-2 text-sm font-semibold text-gray-100">
+              Correo electrónico
+            </label>
+            <input
+              type="email"
+              placeholder="tucorreo@correo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="bg-gray-900 border border-gray-600 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all duration-200"
+              aria-label="Email address"
+            />
+          </div>
+          <motion.button
+            type="submit"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full bg-blue-600 text-white rounded-lg border border-gray-700/50 hover:bg-blue-700 hover:border-blue-500 transition-all duration-200 p-2.5 font-semibold"
+            aria-label="Send recovery code"
+          >
+            Enviar código
+          </motion.button>
+        </form>
+      </motion.div>
+    </section>
   );
 }

@@ -1,18 +1,17 @@
 /* eslint-disable */
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
-import { AnimatePresence } from "framer-motion";
-import { Info, Clock, Repeat, RotateCcw, Zap, PlayCircle, HeartPulse, Scale, BicepsFlexed, StickyNote } from "lucide-react";
+import { Info, Clock, Repeat, RotateCcw, Zap, PlayCircle, HeartPulse, Scale, BicepsFlexed, StickyNote, X } from "lucide-react";
 
 export default function ClientExercises({ day }) {
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
-
   const userProfile = JSON.parse(localStorage.getItem("userProfile"));
   const clientId = userProfile?.id;
+  const userName = userProfile?.name || "";
 
   useEffect(() => {
     const fetchExercises = async () => {
@@ -37,9 +36,9 @@ export default function ClientExercises({ day }) {
     fetchExercises();
   }, [clientId, day]);
 
-  if (loading) return <p className="text-center mt-6 text-gray-500">Cargando ejercicios...</p>;
-  if (error) return <p className="text-center mt-6 text-red-500">{error}</p>;
-  if (exercises.length === 0) return <p className="text-center mt-6 text-gray-500">No hay ejercicios para este día.</p>;
+  if (loading) return <p className="text-center mt-20 text-gray-400">Loading exercises...</p>;
+  if (error) return <p className="text-center mt-20 text-red-400">{error}</p>;
+  if (exercises.length === 0) return <p className="text-center mt-20 text-gray-400">No exercises for this day.</p>;
 
   const typeMapping = {
     "CALENTAMIENTO": "Calentamiento",
@@ -56,12 +55,12 @@ export default function ClientExercises({ day }) {
     return acc;
   }, {});
 
-  // Fondo blanco para todos los tipos
   const typeColors = {
-    "Calentamiento": "bg-white border-yellow-500",
-    "Fuerza": "bg-white border-orange-500",
-    "Estabilidad": "bg-white border-fuchsia-800",
-    "Cardio": "bg-white border-red-500",
+    "Calentamiento": "border-yellow-600",
+    "Fuerza": "border-orange-500",
+    "Estabilidad": "border-fuchsia-800",
+    "Cardio": "border-red-600",
+    "Otros": "border-gray-600",
   };
 
   const typeIcons = {
@@ -69,118 +68,146 @@ export default function ClientExercises({ day }) {
     "Fuerza": BicepsFlexed,
     "Estabilidad": Scale,
     "Cardio": HeartPulse,
+    "Otros": PlayCircle,
   };
 
-  const order = ["Calentamiento", "Fuerza", "Estabilidad", "Cardio", "Otros"];
+  const order = ["Calentamiento", "Fuerza", "Estabilidad", "Cardio"];
 
-  // Guía de iconos con colores
   const iconGuide = [
-    { icon: Repeat, label: "Repeticiones", color: "text-yellow-500" },
-    { icon: Clock, label: "Duración", color: "text-green-500" },
-    { icon: RotateCcw, label: "Descanso", color: "text-purple-500" },
-    { icon: StickyNote, label: "Descripción", color: "text-gray-500" },
-    { icon: Info, label: "Ver imagen", color: "text-blue-600" },
-   
+    { icon: Repeat, label: "Repetitions", color: "text-yellow-500" },
+    { icon: Clock, label: "Duration", color: "text-green-500" },
+    { icon: RotateCcw, label: "Rest", color: "text-purple-500" },
+    { icon: StickyNote, label: "Description", color: "text-gray-500" },
+    { icon: Info, label: "View image", color: "text-blue-400" },
   ];
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Guía de iconos */}
-      <div className="flex flex-wrap gap-6 mb-6">
-        {iconGuide.map(({ icon: Icon, label, color }) => (
-          <div key={label} className="flex items-center gap-2 text-gray-700">
-            <Icon className={`w-5 h-5 ${color}`} />
-            <span className="text-sm">{label}</span>
+    <div className="min-h-screen">
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-8"
+        >
+          {/* Icon Guide */}
+          <div className="flex flex-wrap gap-6">
+            {iconGuide.map(({ icon: Icon, label, color }) => (
+              <div key={label} className="flex items-center gap-2 text-gray-100">
+                <Icon className={`w-4 h-4 ${color}`} />
+                <span className="text-sm">{label}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {order.map((type) => {
-        if (!groupedByType[type]) return null;
-        const exList = groupedByType[type];
-        const IconComponent = typeIcons[type] || PlayCircle;
-        const colorClass = typeColors[type] || "bg-white";
+          {order.map((type) => {
+            if (!groupedByType[type]) return null;
+            const exList = groupedByType[type];
+            const IconComponent = typeIcons[type];
+            const colorClass = typeColors[type];
 
-        return (
-          <div key={type}>
-            <h3 className={`text-lg font-semibold mb-3 pl-3 py-1 rounded-r-lg flex items-center gap-2 ${colorClass} border-l-4`}>
-              <IconComponent className="w-5 h-5 text-gray-700" />
-              {type}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <AnimatePresence>
-                {exList.map((ex, idx) => (
-                  <motion.div
-                    key={ex.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ delay: idx * 0.05, type: "spring", stiffness: 200, damping: 20 }}
-                    whileHover={{ scale: 1.03, y: -3, boxShadow: "0 6px 12px rgba(0,0,0,0.15)" }}
-                    className={`relative bg-white rounded-lg border p-4 cursor-pointer flex justify-between items-start ${colorClass}`}
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800">{ex.catalogo_ejercicios?.nombre}</p>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {ex.n_reps && (
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <Repeat className="w-4 h-4 text-yellow-500" /> {ex.n_reps} 
-                          </div>
-                        )}
-                        {ex.duracion && (
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <Clock className="w-4 h-4 text-green-500" /> {ex.duracion}
-                          </div>
-                        )}
-                        {ex.descanso && (
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <RotateCcw className="w-4 h-4 text-purple-500" /> {ex.descanso}
-                          </div>
-                        )}
-                      </div>
-                      {ex.descripcion && (
-                        <div className="flex items-center gap-1 mt-1 text-sm text-gray-700">
-                          <StickyNote className="w-4 h-4 text-gray-500" /> {ex.descripcion}
-                        </div>
-                      )}
-                    </div>
-                    {ex.catalogo_ejercicios?.imagen && (
-                      <button
-                        onClick={() => setSelectedImage(ex.catalogo_ejercicios.imagen)}
-                        className="ml-3 text-blue-600 hover:text-blue-800"
+            return (
+              <div key={type}>
+                <h3 className={`text-lg font-semibold mb-4 pl-4 py-2 rounded-r-lg flex items-center gap-2 bg-gray-800/80 border-l-4 ${colorClass}`}>
+                  <IconComponent className="w-5 h-5 text-gray-300" />
+                  {type}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <AnimatePresence>
+                    {exList.map((ex, idx) => (
+                      <motion.div
+                        key={ex.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ delay: idx * 0.05, type: "spring", stiffness: 200, damping: 20 }}
+                        whileHover={{ scale: 1.03, y: -3 }}
+                        className="relative bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-5 hover:border-blue-500 transition-all duration-200"
                       >
-                        <Info className="w-5 h-5" />
-                      </button>
-                    )}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
-        );
-      })}
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-transparent opacity-50"></div>
+                        <div className="relative z-10 flex justify-between items-start">
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-100">{ex.catalogo_ejercicios?.nombre}</p>
+                            <div className="flex flex-wrap gap-3 mt-3 text-sm text-gray-300">
+                              {ex.n_reps && (
+                                <div className="flex items-center gap-2">
+                                  <Repeat className="w-4 h-4 text-yellow-500" /> {ex.n_reps}
+                                </div>
+                              )}
+                              {ex.duracion && (
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-green-500" /> {ex.duracion}
+                                </div>
+                              )}
+                              {ex.descanso && (
+                                <div className="flex items-center gap-2">
+                                  <RotateCcw className="w-4 h-4 text-purple-500" /> {ex.descanso}
+                                </div>
+                              )}
+                              {ex.descripcion && (
+                                <div className="flex items-center gap-2">
+                                  <StickyNote className="w-4 h-4 text-gray-500" /> {ex.descripcion}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {ex.catalogo_ejercicios?.imagen && (
+                            <button
+                              onClick={() => setSelectedImage(ex.catalogo_ejercicios.imagen)}
+                              className="ml-3 text-blue-400 hover:text-blue-300"
+                              aria-label={`View image for ${ex.catalogo_ejercicios?.nombre}`}
+                            >
+                              <Info className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            );
+          })}
 
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div
-            key="modal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-            onClick={() => setSelectedImage(null)}
-          >
-            <motion.img
-              src={selectedImage}
-              alt="Ejercicio"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-              className="max-h-[80%] max-w-[80%] rounded-lg shadow-2xl"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+          <AnimatePresence>
+            {selectedImage && (
+              <motion.div
+                key="modal"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+                onClick={() => setSelectedImage(null)}
+                role="dialog"
+                aria-label="Exercise image modal"
+                aria-modal="true"
+              >
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.8 }}
+                  className="relative max-h-[80%] max-w-[80%] rounded-2xl shadow-2xl border border-gray-700/50"
+                >
+                  <motion.button
+                    onClick={() => setSelectedImage(null)}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="absolute top-4 right-4 bg-gray-800/80 backdrop-blur-sm rounded-full p-2 text-gray-300 hover:text-blue-400 border border-gray-700/50 hover:border-blue-500 transition-all duration-200"
+                    aria-label="Close image modal"
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.button>
+                  <img
+                    src={selectedImage}
+                    alt="Exercise"
+                    className="max-h-[80vh] max-w-[80vw] rounded-2xl"
+                  />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
     </div>
   );
 }

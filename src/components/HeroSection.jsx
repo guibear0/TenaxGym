@@ -1,23 +1,22 @@
 //eslint-disable-next-line
 import { motion } from "framer-motion";
-import { HeartHandshake } from 'lucide-react'
+import { HeartHandshake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button";
 
 export default function HeroSection() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative overflow-hidden bg-alice-blue min-h-screen flex flex-col justify-center top-15">
-      
+    <section className="relative overflow-hidden  min-h-screen flex flex-col justify-center">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-       className="absolute top-3 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-blue-100"
-
+        className="absolute top-3 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-gray-800/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-gray-700/50"
       >
-        <HeartHandshake className="w-6 h-6 text-blue-600" />
-        <span className="text-2xl font-bold text-blue-800">TENAX GYM</span>
+        <HeartHandshake className="w-6 h-6 text-blue-400" />
+        <span className="text-2xl font-bold text-gray-100">TENAX GYM</span>
       </motion.div>
 
       <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-32 text-center">
@@ -25,11 +24,11 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-5xl lg:text-5xl font-extrabold text-gray-900 mb-6 leading-tight"
+          className="text-5xl lg:text-5xl font-extrabold text-gray-100 mb-6 leading-tight"
         >
           Transforma tu
-          <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent block">
-            Fitness Journey
+          <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent block">
+            Rutina de Ejercicio
           </span>
         </motion.h1>
 
@@ -37,7 +36,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="text-xl lg:text-xl text-gray-700 mb-12 max-w-3xl mx-auto leading-relaxed"
+          className="text-xl lg:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed"
         >
           Registra ejercicios, monitorea tu peso y medidas, organiza tu rutina con nuestro calendario inteligente
         </motion.p>
@@ -48,21 +47,24 @@ export default function HeroSection() {
           transition={{ duration: 0.8, delay: 0.6 }}
           className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
         >
-          <button
+          <Button
             onClick={() => navigate("/register")}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto cursor-pointer"
+            variant="solid"
+            className="w-full sm:w-auto px-8 py-4 text-lg"
+            aria-label="Start for free"
           >
             Comenzar Gratis
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => navigate("/login")}
-            className="group border-2 border-gray-300 bg-white/80 backdrop-blur-sm px-8 py-4 rounded-full text-lg font-semibold text-gray-800 hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 cursor-pointer w-full sm:w-auto"
+            variant="outline"
+            className="w-full sm:w-auto px-8 py-4 text-lg"
+            aria-label="Sign in"
           >
             Iniciar Sesión
-          </button>
+          </Button>
         </motion.div>
       </div>
     </section>
   );
 }
-

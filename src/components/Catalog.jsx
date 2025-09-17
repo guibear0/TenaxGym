@@ -1,5 +1,6 @@
 //eslint-disable-next-line
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 
 export default function ExerciseCatalog({
   catalog,
@@ -18,82 +19,138 @@ export default function ExerciseCatalog({
     items: catalog.filter((item) => item.tipo.toLowerCase() === tipo),
   }));
 
+  // Estado para secciones expandidas/colapsadas
+  const [expandedSections, setExpandedSections] = useState(
+    tipoOrder.reduce((acc, tipo) => ({ ...acc, [tipo]: false }), {})
+  );
+
+  // Alternar expansión/colapso
+  const toggleSection = (tipo) => {
+    setExpandedSections((prev) => ({ ...prev, [tipo]: !prev[tipo] }));
+  };
+
   return (
-    <div className="mt-8">
-      <h3 className="text-lg font-semibold mb-2">Añadir del catálogo</h3>
+    <div className="mt-10">
+      <h3 className="text-xl font-semibold mb-4 text-gray-100">Add from Catalog</h3>
       {groupedCatalog.map(
         (group) =>
           group.items.length > 0 && (
-            <div key={group.tipo} className="mb-4 border rounded p-3 bg-gray-50">
-              <h4 className="font-semibold mb-2 cursor-pointer">{group.tipo.toUpperCase()}</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {group.items.map((item) => (
+            <div key={group.tipo} className="mb-6">
+              <motion.div
+                className="flex justify-between items-center p-4 bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/50 cursor-pointer hover:bg-gray-700/80 transition-all duration-200"
+                onClick={() => toggleSection(group.tipo)}
+                role="button"
+                tabIndex={0}
+                aria-expanded={expandedSections[group.tipo]}
+                aria-label={`Toggle ${group.tipo.toUpperCase()} section`}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    toggleSection(group.tipo);
+                  }
+                }}
+              >
+                <h4 className="font-semibold text-lg text-gray-100">
+                  {group.tipo.toUpperCase()}
+                </h4>
+                <motion.svg
+                  className="w-5 h-5 text-gray-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  animate={{ rotate: expandedSections[group.tipo] ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </motion.svg>
+              </motion.div>
+              <AnimatePresence>
+                {expandedSections[group.tipo] && (
                   <motion.div
-                    key={item.id}
-                    whileHover={{ scale: 1.02 }}
-                    className="border rounded p-3 bg-white shadow-sm"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
                   >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{item.nombre}</p>
-                        <p className="text-sm text-gray-500">{item.tipo}</p>
-                      </div>
-                      <button
-                        className="bg-blue-600 text-white px-3 py-1 rounded"
-                        onClick={() =>
-                          showAddForm === item.id
-                            ? handleAddClick(null)
-                            : handleAddClick(item.id)
-                        }
-                      >
-                        {showAddForm === item.id ? "Cerrar" : "Añadir"}
-                      </button>
-                    </div>
-                    {showAddForm === item.id && (
-                      <div className="mt-3 space-y-2">
-                        <input
-                          placeholder="Reps"
-                          className="border p-1 rounded w-full"
-                          value={formValues.n_reps}
-                          onChange={(e) =>
-                            setFormValues({ ...formValues, n_reps: e.target.value })
-                          }
-                        />
-                        <input
-                          placeholder="Duración"
-                          className="border p-1 rounded w-full"
-                          value={formValues.duracion}
-                          onChange={(e) =>
-                            setFormValues({ ...formValues, duracion: e.target.value })
-                          }
-                        />
-                        <input
-                          placeholder="Descanso"
-                          className="border p-1 rounded w-full"
-                          value={formValues.descanso}
-                          onChange={(e) =>
-                            setFormValues({ ...formValues, descanso: e.target.value })
-                          }
-                        />
-                        <input
-                          placeholder="Descripción"
-                          className="border p-1 rounded w-full"
-                          value={formValues.descripcion}
-                          onChange={(e) =>
-                            setFormValues({ ...formValues, descripcion: e.target.value })
-                          }
-                        />
-                        <button
-                          onClick={() => addExercise(item.id)}
-                          className="bg-green-600 text-white px-3 py-1 rounded"
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                      {group.items.map((item) => (
+                        <motion.div
+                          key={item.id}
+                          whileHover={{ scale: 1.02 }}
+                          className="relative border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-4 hover:border-blue-500 transition-all duration-200"
                         >
-                          Guardar
-                        </button>
-                      </div>
-                    )}
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-transparent opacity-50"></div>
+                          <div className="relative z-10 flex justify-between items-center">
+                            <div>
+                              <p className="font-semibold text-gray-100">{item.nombre}</p>
+                              <p className="text-sm text-gray-400">{item.tipo}</p>
+                            </div>
+                            <button
+                              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 cursor-pointer"
+                              onClick={() =>
+                                showAddForm === item.id
+                                  ? handleAddClick(null)
+                                  : handleAddClick(item.id)
+                              }
+                              aria-label={showAddForm === item.id ? "Close form" : `Add ${item.nombre}`}
+                            >
+                              {showAddForm === item.id ? "Close" : "Add"}
+                            </button>
+                          </div>
+                          {showAddForm === item.id && (
+                            <div className="mt-4 space-y-3 relative z-10">
+                              <input
+                                placeholder="Reps"
+                                className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                value={formValues.n_reps}
+                                onChange={(e) =>
+                                  setFormValues({ ...formValues, n_reps: e.target.value })
+                                }
+                              />
+                              <input
+                                placeholder="Duration"
+                                className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                value={formValues.duracion}
+                                onChange={(e) =>
+                                  setFormValues({ ...formValues, duracion: e.target.value })
+                                }
+                              />
+                              <input
+                                placeholder="Rest"
+                                className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                value={formValues.descanso}
+                                onChange={(e) =>
+                                  setFormValues({ ...formValues, descanso: e.target.value })
+                                }
+                              />
+                              <input
+                                placeholder="Description"
+                                className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                value={formValues.descripcion}
+                                onChange={(e) =>
+                                  setFormValues({ ...formValues, descripcion: e.target.value })
+                                }
+                              />
+                              <button
+                                onClick={() => addExercise(item.id)}
+                                className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200"
+                                aria-label={`Save exercise ${item.nombre}`}
+                              >
+                                Save
+                              </button>
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
                   </motion.div>
-                ))}
-              </div>
+                )}
+              </AnimatePresence>
             </div>
           )
       )}
