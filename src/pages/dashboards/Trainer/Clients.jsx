@@ -93,9 +93,9 @@ export default function Clients() {
             >
               {/* Clientes asignados */}
               <div>
-                <h2 className="text-3xl font-bold mb-6 text-center">Assigned Clients</h2>
+                <h2 className="text-3xl font-bold mb-6 text-center">Clientes Asignados</h2>
                 {assignedClients.length === 0 ? (
-                  <p className="text-center text-gray-400">You don't have any assigned clients.</p>
+                  <p className="text-center text-gray-400">No tiens clientes asignados</p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {assignedClients.map((client) => (
@@ -121,7 +121,7 @@ export default function Clients() {
                           <p className="font-semibold text-lg text-gray-100">{client.profiles.name}</p>
                           <p className="text-sm text-gray-400">{client.profiles.email}</p>
                         </div>
-                        <span className="relative z-10 text-green-400 font-medium mt-3">Assigned</span>
+                        <span className="relative z-10 text-green-400 font-medium mt-3">Asignado</span>
                       </motion.div>
                     ))}
                   </div>
@@ -131,7 +131,7 @@ export default function Clients() {
               {/* Clientes no asignados */}
               {unassignedClients.length > 0 && (
                 <div>
-                  <h2 className="text-3xl font-bold mb-6 text-center">Available Clients</h2>
+                  <h2 className="text-3xl font-bold mb-6 text-center">Clientes Disponibles</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {unassignedClients.map((client) => (
                       <motion.div
@@ -163,7 +163,7 @@ export default function Clients() {
                           }}
                           aria-label={`Assign ${client.profiles.name}`}
                         >
-                          Assign
+                          Asignar
                         </button>
                       </motion.div>
                     ))}
@@ -185,7 +185,7 @@ export default function Clients() {
                 <button
                   className="text-blue-400 hover:text-blue-300 font-medium mb-2 flex items-center gap-2 cursor-pointer"
                   onClick={() => setSelectedClient(null)}
-                  aria-label="Back to client list"
+                  aria-label="Volver a lista de clientes"
                 >
                   <svg
                     className="w-4 h-4"
@@ -201,7 +201,7 @@ export default function Clients() {
                       d="M15 19l-7-7 7-7"
                     />
                   </svg>
-                  Back to Clients
+                  Volver a Clientes
                 </button>
               </div>
 

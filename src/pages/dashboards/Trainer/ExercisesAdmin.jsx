@@ -269,18 +269,18 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
       <div className="max-w-6xl mx-auto flex gap-8">
         {/* === Guía lateral === */}
   <aside className="w-48 self-start space-y-3 bg-gray-800/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/50">
-  <h3 className="font-semibold text-lg text-gray-100">Guide</h3>
+  <h3 className="font-semibold text-lg text-gray-100">Guía</h3>
   <div className="flex items-center gap-2 text-sm">
-    <Repeat className="w-4 h-4 text-gray-300" /> Repetitions
+    <Repeat className="w-4 h-4 text-gray-300" /> Repeticiones
   </div>
   <div className="flex items-center gap-2 text-sm">
-    <Clock className="w-4 h-4 text-gray-300" /> Duration
+    <Clock className="w-4 h-4 text-gray-300" /> Duración
   </div>
   <div className="flex items-center gap-2 text-sm">
-    <RotateCcw className="w-4 h-4 text-gray-300" /> Rest
+    <RotateCcw className="w-4 h-4 text-gray-300" /> Descanso
   </div>
   <div className="flex items-center gap-2 text-sm">
-    <StickyNote className="w-4 h-4 text-gray-300" /> Trainer's Note
+    <StickyNote className="w-4 h-4 text-gray-300" /> Notas de entrenador
   </div>
 </aside>
 
@@ -330,7 +330,7 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
                           : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white cursor-pointer"
                       }`}
                     >
-                      Day {d}
+                      Día {d}
                     </button>
                   ))}
                 </div>
