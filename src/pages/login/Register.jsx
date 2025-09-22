@@ -10,6 +10,7 @@ export default function Register() {
     name: "",
     email: "",
     password: "",
+    sexo: "Hombre",
     is_trainer: false,
     trainerCode: "",
   });
@@ -38,6 +39,7 @@ export default function Register() {
           email: form.email,
           password: hashedPassword,
           is_trainer: form.is_trainer,
+          sexo: form.sexo,
         })
         .select();
 
@@ -50,6 +52,7 @@ export default function Register() {
           name: form.name,
           email: form.email,
           is_trainer: form.is_trainer,
+          sexo: form.sexo,
         })
       );
 
@@ -92,7 +95,23 @@ export default function Register() {
                 className="bg-gray-900 border border-gray-600 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all duration-200"
                 aria-label="Full name"
               />
-            </div>
+            </div> 
+
+            <div>
+                <label className="block mb-2 text-sm font-semibold text-gray-100">
+                  Sexo
+                </label>
+                <select
+                  value={form.sexo}
+                  onChange={(e) => setForm({ ...form, sexo: e.target.value })}
+                  className="bg-gray-900 border border-gray-600 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all duration-200"
+                  required
+                >
+                  <option value="Hombre">Hombre</option>
+                  <option value="Mujer">Mujer</option>
+                </select>
+              </div>
+
 
             <div>
               <label className="block mb-2 text-sm font-semibold text-gray-100">

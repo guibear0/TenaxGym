@@ -30,12 +30,13 @@ export default function ClientDashboard() {
     // Set dynamic greeting based on time of day
     const hour = new Date().getHours();
     if (hour < 12) setGreeting("Buenos Días");
-    else if (hour < 18) setGreeting("Buenas Tardes");
+    else if (hour < 21) setGreeting("Buenas Tardes");
     else setGreeting("Buenas Noches");
 
     // Set random quote
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     setQuote(randomQuote);
+    //eslint-disable-next-line
   }, []);
 
   const cards = [
@@ -54,6 +55,14 @@ export default function ClientDashboard() {
       onClick: () => navigate("/day-selector"),
       bgColor: "bg-green-600",
       hoverColor: "hover:bg-green-700",
+    },
+    {
+      title: "Medidas Corporales",
+      icon: <Activity size={48} />,
+      description: "Registra y monitorea tus medidas corporales",
+      onClick: () => navigate("/measures"),
+      bgColor: "bg-purple-600",
+      hoverColor: "hover:bg-purple-700",
     },
   ];
 

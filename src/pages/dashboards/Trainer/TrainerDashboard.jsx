@@ -34,6 +34,7 @@ export default function TrainerDashboard() {
     // Set random quote
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     setQuote(randomQuote);
+    //eslint-disable-next-line
   }, []);
 
   const cards = [

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { Clock, Repeat, RotateCcw, StickyNote, Trash2, Edit2 } from "lucide-react";
-import { toast, Toaster } from "react-hot-toast";
+
 import ExerciseCatalog from "../../../components/Catalog";
 
 export default function ClientExercisesAdmin({ clientId: propClientId }) {
@@ -460,7 +460,7 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
             )}
           </motion.div>
         </div>
-        <Toaster position="top-center" />
+       
       </div>
     </div>
   );
