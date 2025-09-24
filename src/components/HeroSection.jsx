@@ -8,15 +8,18 @@ export default function HeroSection() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative overflow-hidden  min-h-screen flex flex-col justify-center">
+    <section className="relative overflow-hidden  flex flex-col justify-center">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="absolute top-3 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-gray-800/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-gray-700/50"
+        className="absolute top-3 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-gray-800/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-gray-700/50 mt-4"
       >
         <HeartHandshake className="w-6 h-6 text-blue-400" />
-        <span className="text-2xl font-bold text-gray-100">TENAX GYM</span>
+        {/* 👇 Ajustamos tamaños según el viewport */}
+        <span className="text-lg xs:text-xl sm:text-2xl md:text-2xl font-bold text-gray-100">
+          TENAX GYM
+        </span>
       </motion.div>
 
       <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-32 text-center">
