@@ -64,6 +64,14 @@ export default function ClientDashboard() {
       bgColor: "bg-purple-600",
       hoverColor: "hover:bg-purple-700",
     },
+     {
+      title: "Test de movilidad",
+      icon: <Activity size={48} />,
+      description: "Haz el test para obtener tu calificación de movilidad",
+      onClick: () => navigate("/mobility"),
+      bgColor: "bg-gray-600",
+      hoverColor: "hover:bg-gray-700",
+    },
   ];
 
   return (

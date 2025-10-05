@@ -36,9 +36,9 @@ export default function ClientExercises({ day }) {
     fetchExercises();
   }, [clientId, day]);
 
-  if (loading) return <p className="text-center mt-20 text-gray-400">Loading exercises...</p>;
+  if (loading) return <p className="text-center mt-20 text-gray-400">Cargando ejercicios</p>;
   if (error) return <p className="text-center mt-20 text-red-400">{error}</p>;
-  if (exercises.length === 0) return <p className="text-center mt-20 text-gray-400">No exercises for this day.</p>;
+  if (exercises.length === 0) return <p className="text-center mt-20 text-gray-400">No hay ejercicios para hoy.</p>;
 
   const typeMapping = {
     "CALENTAMIENTO": "Calentamiento",

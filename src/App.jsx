@@ -12,6 +12,7 @@ import DaySelector from "./pages/dashboards/clients/DaySelector";
 import ExercisesAdmin from "./pages/dashboards/Trainer/ExercisesAdmin";
 import Catalog from "./pages/dashboards/Trainer/Catalog";
 import Measures from "./pages/dashboards/clients/Measures";
+import Mobility from "./pages/dashboards/clients/Movilidad";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/exercises-admin" element={<ExercisesAdmin />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/measures" element={<Measures />} />
+        <Route path="/mobility" element={<Mobility/>} />
       </Routes>
     </BrowserRouter>
     

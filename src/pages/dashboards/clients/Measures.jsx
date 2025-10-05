@@ -4,6 +4,7 @@ import RegistroPerimetro from "../../../components/RegistroPerimetro";
 import RegistroPerimetroPar from "../../../components/RegistroPerimetroPar";
 import ICCPanel from "../../../components/ICCInfo";
 import BMInfo from "../../../components/IMCPanel";
+import BackButton from "../../../components/ui/BackButton";
 
 const CAMPOS_INDIVIDUALES = [
   { nombre: "Pecho", campo: "pecho" },
@@ -65,6 +66,7 @@ export default function Mediciones() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white py-12">
       <div className="max-w-5xl mx-auto px-4 space-y-6">
+         <BackButton label="Atras"/>
         <h1 className="text-3xl font-bold text-center mb-6">
           {user.name}, gestiona tus mediciones
         </h1>
