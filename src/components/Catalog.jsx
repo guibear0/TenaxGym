@@ -11,7 +11,12 @@ export default function ExerciseCatalog({
   addExercise,
 }) {
   // Orden deseado
-  const tipoOrder = ["calentamiento", "bloque_fuerza", "estabilidad_cardio", "cardio"];
+  const tipoOrder = [
+    "calentamiento",
+    "bloque_fuerza",
+    "estabilidad_cardio",
+    "cardio",
+  ];
 
   // Agrupar ejercicios por tipo
   const groupedCatalog = tipoOrder.map((tipo) => ({
@@ -31,7 +36,6 @@ export default function ExerciseCatalog({
 
   return (
     <div className="mt-10">
-      <h3 className="text-xl font-semibold mb-4 text-gray-100">Add from Catalog</h3>
       {groupedCatalog.map(
         (group) =>
           group.items.length > 0 && (
@@ -87,8 +91,12 @@ export default function ExerciseCatalog({
                           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-transparent opacity-50"></div>
                           <div className="relative z-10 flex justify-between items-center">
                             <div>
-                              <p className="font-semibold text-gray-100">{item.nombre}</p>
-                              <p className="text-sm text-gray-400">{item.tipo}</p>
+                              <p className="font-semibold text-gray-100">
+                                {item.nombre}
+                              </p>
+                              <p className="text-sm text-gray-400">
+                                {item.tipo}
+                              </p>
                             </div>
                             <button
                               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 cursor-pointer"
@@ -97,43 +105,59 @@ export default function ExerciseCatalog({
                                   ? handleAddClick(null)
                                   : handleAddClick(item.id)
                               }
-                              aria-label={showAddForm === item.id ? "Close form" : `Add ${item.nombre}`}
+                              aria-label={
+                                showAddForm === item.id
+                                  ? "Cerrar formulario"
+                                  : `Add ${item.nombre}`
+                              }
                             >
-                              {showAddForm === item.id ? "Close" : "Add"}
+                              {showAddForm === item.id ? "Cerrar" : "Añadir"}
                             </button>
                           </div>
                           {showAddForm === item.id && (
                             <div className="mt-4 space-y-3 relative z-10">
                               <input
-                                placeholder="Reps"
+                                placeholder="Repeticiones"
                                 className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 value={formValues.n_reps}
                                 onChange={(e) =>
-                                  setFormValues({ ...formValues, n_reps: e.target.value })
+                                  setFormValues({
+                                    ...formValues,
+                                    n_reps: e.target.value,
+                                  })
                                 }
                               />
                               <input
-                                placeholder="Duration"
+                                placeholder="Duración"
                                 className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 value={formValues.duracion}
                                 onChange={(e) =>
-                                  setFormValues({ ...formValues, duracion: e.target.value })
+                                  setFormValues({
+                                    ...formValues,
+                                    duracion: e.target.value,
+                                  })
                                 }
                               />
                               <input
-                                placeholder="Rest"
+                                placeholder="Descanso"
                                 className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 value={formValues.descanso}
                                 onChange={(e) =>
-                                  setFormValues({ ...formValues, descanso: e.target.value })
+                                  setFormValues({
+                                    ...formValues,
+                                    descanso: e.target.value,
+                                  })
                                 }
                               />
                               <input
-                                placeholder="Description"
+                                placeholder="Descripción"
                                 className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 value={formValues.descripcion}
                                 onChange={(e) =>
-                                  setFormValues({ ...formValues, descripcion: e.target.value })
+                                  setFormValues({
+                                    ...formValues,
+                                    descripcion: e.target.value,
+                                  })
                                 }
                               />
                               <button
@@ -141,7 +165,7 @@ export default function ExerciseCatalog({
                                 className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200"
                                 aria-label={`Save exercise ${item.nombre}`}
                               >
-                                Save
+                                Guardar
                               </button>
                             </div>
                           )}

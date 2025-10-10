@@ -1,17 +1,27 @@
 /* eslint-disable */
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
-import { Clock, Repeat, RotateCcw, StickyNote, Trash2, Edit2 } from "lucide-react";
+import {
+  Clock,
+  Repeat,
+  RotateCcw,
+  StickyNote,
+  Trash2,
+  Edit2,
+  MessageSquare,
+} from "lucide-react";
+
+import { toast } from "react-hot-toast";
 
 import ExerciseCatalog from "../../../components/Catalog";
 
-export default function ClientExercisesAdmin({ clientId: propClientId }) {
+export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
   const [clients, setClients] = useState([]);
   const [clientId, setClientId] = useState(propClientId || "");
   const [day, setDay] = useState(1);
   const [catalog, setCatalog] = useState([]);
-  const [exercises, setExercises] = useState([]);
+  const [exercises, setExercises] = useState({});
   const [loading, setLoading] = useState(false);
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [clientName, setClientName] = useState("");
@@ -25,17 +35,57 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
   });
   const [editing, setEditing] = useState(null);
   const [editValues, setEditValues] = useState({});
-  const [greeting, setGreeting] = useState("");
+  const [comments, setComments] = useState({});
+  const [editingComment, setEditingComment] = useState(null);
+  const [editCommentValue, setEditCommentValue] = useState("");
+  const [showCatalog, setShowCatalog] = useState(false);
+  const [showSessions, setShowSessions] = useState(false);
+  const [sessions, setSessions] = useState([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const userProfile = JSON.parse(localStorage.getItem("userProfile"));
-  const trainerName = userProfile?.name || "";
 
-  // === clientes ===
+  // === Funciones comentarios ===
+  const startEditComment = (tipo) => {
+    setEditingComment(tipo);
+    setEditCommentValue(comments[tipo]?.comentario || "");
+  };
+
+  const saveComment = async (tipo) => {
+    try {
+      const { error } = await supabase.from("comentarios_bloque").upsert(
+        [
+          {
+            client_id: clientId,
+            numero_dia: day,
+            tipo: tipo,
+            comentario: editCommentValue,
+          },
+        ],
+        {
+          onConflict: ["client_id", "numero_dia", "tipo"],
+        }
+      );
+
+      if (error) throw error;
+
+      setComments((prev) => ({
+        ...prev,
+        [tipo]: { comentario: editCommentValue },
+      }));
+      setEditingComment(null);
+      toast.success("Comentario guardado correctamente");
+    } catch (err) {
+      toast.error("Error al guardar comentario: " + err.message);
+    }
+  };
+
+  // === Traer clientes ===
   useEffect(() => {
     if (propClientId) return;
     const fetchClients = async () => {
       try {
-        const userProfile = JSON.parse(localStorage.getItem("userProfile"));
         const trainerId = userProfile?.id;
         const { data, error } = await supabase
           .from("clientes")
@@ -51,17 +101,16 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
     fetchClients();
   }, [propClientId]);
 
-  // === catálogo ===
+  // === Traer catálogo ===
   useEffect(() => {
     const fetchCatalog = async () => {
       setLoadingCatalog(true);
       try {
         const { data, error } = await supabase
           .from("catalogo_ejercicios")
-          .select("id, nombre, tipo");
+          .select("id, nombre, tipo, imagen");
         if (error) throw error;
 
-        // Define the desired order for tipo
         const tipoOrder = {
           calentamiento: 1,
           fuerza: 2,
@@ -69,10 +118,9 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
           cardio: 4,
         };
 
-        // Sort the catalog based on tipoOrder
         const sortedCatalog = data.sort((a, b) => {
-          const orderA = tipoOrder[a.tipo.toLowerCase()] || 999;
-          const orderB = tipoOrder[b.tipo.toLowerCase()] || 999;
+          const orderA = tipoOrder[a.tipo?.toLowerCase()] || 999;
+          const orderB = tipoOrder[b.tipo?.toLowerCase()] || 999;
           return orderA - orderB;
         });
 
@@ -86,7 +134,7 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
     fetchCatalog();
   }, []);
 
-  // === ejercicios cliente ===
+  // === Traer ejercicios por cliente y día ===
   useEffect(() => {
     if (!clientId) return;
     const fetchExercises = async () => {
@@ -94,12 +142,19 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
       try {
         const { data, error } = await supabase
           .from("ejercicios_cliente")
-          .select("*, catalogo_ejercicios(nombre, tipo)")
+          .select("*, catalogo_ejercicios(nombre, tipo, imagen)")
           .eq("client_id", clientId)
           .eq("numero_dia", day)
           .order("created_at", { ascending: true });
         if (error) throw error;
-        setExercises(data || []);
+
+        const grouped = data.reduce((acc, ex) => {
+          const tipo = ex.catalogo_ejercicios?.tipo || "Otros";
+          if (!acc[tipo]) acc[tipo] = [];
+          acc[tipo].push(ex);
+          return acc;
+        }, {});
+        setExercises(grouped);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -107,50 +162,75 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
       }
     };
     fetchExercises();
+    fetchComments();
   }, [clientId, day]);
 
-  // === Dynamic greeting ===
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Good Morning");
-    else if (hour < 18) setGreeting("Good Afternoon");
-    else setGreeting("Good Evening");
-  }, []);
-
-  // === Cuando cambia el cliente, guardamos su nombre ===
-  useEffect(() => {
-    if (!clientId || clients.length === 0) return;
-    const selected = clients.find((c) => c.id_cliente === clientId);
-    setClientName(selected ? selected.profiles.name : "");
-  }, [clientId, clients]);
-
-  // === Fetch single client ===
-  useEffect(() => {
-    if (!propClientId) return;
-    const fetchSingleClient = async () => {
+  const fetchComments = async () => {
+    if (!clientId) return;
+    try {
       const { data, error } = await supabase
-        .from("clientes")
-        .select("id_cliente, profiles(name)")
-        .eq("id_cliente", propClientId)
-        .single();
-      if (!error && data) {
-        setClients([data]);
-        setClientName(data.profiles.name);
-      }
-    };
-    fetchSingleClient();
-  }, [propClientId]);
+        .from("comentarios_bloque")
+        .select("*")
+        .eq("client_id", clientId)
+        .eq("numero_dia", day);
 
+      if (error) throw error;
+
+      const map = {};
+      data.forEach((c) => {
+        map[c.tipo] = { comentario: c.comentario };
+      });
+      setComments(map);
+    } catch (err) {
+      console.log("Error fetching comments:", err.message);
+    }
+  };
+
+  // === Nombre cliente seleccionado ===
+  useEffect(() => {
+    if (!clientId) return;
+
+    if (propClientId && clients.length === 0) {
+      // Si es propClientId, traer el nombre del cliente específico
+      const fetchClientName = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("clientes")
+            .select("profiles(name)")
+            .eq("id_cliente", clientId)
+            .single();
+          if (error) throw error;
+          setClientName(data?.profiles?.name || "");
+        } catch (err) {
+          console.log("Error fetching client name:", err.message);
+        }
+      };
+      fetchClientName();
+    } else if (clients.length > 0) {
+      const selected = clients.find((c) => c.id_cliente === clientId);
+      setClientName(selected ? selected.profiles.name : "");
+    }
+  }, [clientId, clients, propClientId]);
+
+  // === Refrescar ejercicios ===
   const refreshExercises = async () => {
     const { data } = await supabase
       .from("ejercicios_cliente")
-      .select("*, catalogo_ejercicios(nombre, tipo)")
+      .select("*, catalogo_ejercicios(nombre, tipo, imagen)")
       .eq("client_id", clientId)
       .eq("numero_dia", day)
       .order("created_at", { ascending: true });
-    setExercises(data || []);
+
+    const grouped = (data || []).reduce((acc, ex) => {
+      const tipo = ex.catalogo_ejercicios?.tipo || "Otros";
+      if (!acc[tipo]) acc[tipo] = [];
+      acc[tipo].push(ex);
+      return acc;
+    }, {});
+    setExercises(grouped);
   };
 
+  // === Funciones ejercicios ===
   const handleAddClick = (id) => {
     setShowAddForm(id);
     setFormValues({ n_reps: "", duracion: "", descanso: "", descripcion: "" });
@@ -158,6 +238,10 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
 
   const addExercise = async (catalogId) => {
     try {
+      // Buscar el nombre del ejercicio en el catálogo
+      const exercise = catalog.find((ex) => ex.id === catalogId);
+      const exerciseName = exercise?.nombre || "Ejercicio";
+
       const { error } = await supabase.from("ejercicios_cliente").insert([
         {
           client_id: clientId,
@@ -171,61 +255,43 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
       ]);
       if (error) throw error;
       setShowAddForm(null);
+      setShowCatalog(false);
       await refreshExercises();
-      toast.success("Ejercicio añadido correctamente", {
-        style: {
-          background: "#1a3c34",
-          color: "#d1fae5",
-          border: "1px solid #6ee7b7",
-        },
-      });
+      toast.success(`${exerciseName} añadido correctamente`);
     } catch (err) {
-      toast.error("Error al añadir: " + err.message, {
-        style: {
-          background: "#4c1d1b",
-          color: "#fee2e2",
-          border: "1px solid #f87171",
-        },
-      });
+      toast.error("Error al añadir ejercicio: " + err.message);
     }
   };
 
-  const deleteExercise = async (exerciseId) => {
-    toast((t) => (
-      <span className="flex items-center gap-2">
-        ¿Eliminar este ejercicio?
-        <button
-          onClick={async () => {
-            const { error } = await supabase
-              .from("ejercicios_cliente")
-              .delete()
-              .eq("id", exerciseId);
-            if (!error) {
-              setExercises((prev) => prev.filter((e) => e.id !== exerciseId));
-              toast.success("Ejercicio eliminado", {
-                style: {
-                  background: "#1a3c34",
-                  color: "#d1fae5",
-                  border: "1px solid #6ee7b7",
-                },
-              });
-            } else {
-              toast.error("Error al eliminar", {
-                style: {
-                  background: "#4c1d1b",
-                  color: "#fee2e2",
-                  border: "1px solid #f87171",
-                },
-              });
-            }
-            toast.dismiss(t.id);
-          }}
-          className="ml-3 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700"
-        >
-          Confirmar
-        </button>
-      </span>
-    ));
+  const deleteExercise = (exerciseId, exerciseName) => {
+    setDeleteConfirm({ id: exerciseId, name: exerciseName });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+
+    const exerciseName = deleteConfirm.name;
+
+    const { error } = await supabase
+      .from("ejercicios_cliente")
+      .delete()
+      .eq("id", deleteConfirm.id);
+
+    if (!error) {
+      setExercises((prev) => {
+        const copy = { ...prev };
+        for (const tipo in copy) {
+          copy[tipo] = copy[tipo].filter((e) => e.id !== deleteConfirm.id);
+          if (copy[tipo].length === 0) delete copy[tipo];
+        }
+        return copy;
+      });
+      toast.success(`${exerciseName} eliminado correctamente`);
+    } else {
+      toast.error("Error al eliminar ejercicio");
+    }
+
+    setDeleteConfirm(null);
   };
 
   const startEdit = (exercise) => {
@@ -246,68 +312,173 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
     if (!error) {
       setEditing(null);
       refreshExercises();
-      toast.success("Ejercicio actualizado correctamente", {
-        style: {
-          background: "#1a3c34",
-          color: "#d1fae5",
-          border: "1px solid #6ee7b7",
-        },
-      });
+      toast.success("Ejercicio actualizado correctamente");
     } else {
-      toast.error("Error al actualizar", {
-        style: {
-          background: "#4c1d1b",
-          color: "#fee2e2",
-          border: "1px solid #f87171",
-        },
-      });
+      toast.error("Error al actualizar");
     }
   };
 
+  // === Funciones sesiones ===
+  const fetchTrainerSessions = async () => {
+    setShowSessions(true);
+    setShowCatalog(false);
+    setLoadingSessions(true);
+    try {
+      const { data, error } = await supabase
+        .from("sesiones")
+        .select("*")
+        .eq("trainer_id", userProfile.id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      setSessions(data || []);
+    } catch (err) {
+      toast.error("Error cargando sesiones: " + err.message);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  const addSessionToClient = async (session) => {
+    try {
+      const { data: sesionExercises, error } = await supabase
+        .from("sesion_ejercicios")
+        .select("*")
+        .eq("sesion_id", session.id)
+        .order("orden", { ascending: true });
+      if (error) throw error;
+
+      for (const ex of sesionExercises) {
+        await supabase.from("ejercicios_cliente").insert([
+          {
+            client_id: clientId,
+            catalogo_id: ex.catalogo_id,
+            numero_dia: day,
+            n_reps: ex.n_reps,
+            duracion: ex.duracion,
+            descanso: ex.descanso,
+            descripcion: ex.descripcion,
+          },
+        ]);
+      }
+
+      await refreshExercises();
+      toast.success(`Sesión "${session.nombre}" añadida correctamente`);
+      setShowSessions(false);
+    } catch (err) {
+      toast.error("Error al añadir sesión: " + err.message);
+    }
+  };
+
+  // === RETURN ===
   return (
-    <div className="min-h-screen">
-      <div className="max-w-6xl mx-auto flex gap-8">
-        {/* === Guía lateral === */}
-  <aside className="w-48 self-start space-y-3 bg-gray-800/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/50">
-  <h3 className="font-semibold text-lg text-gray-100">Guía</h3>
-  <div className="flex items-center gap-2 text-sm">
-    <Repeat className="w-4 h-4 text-gray-300" /> Repeticiones
-  </div>
-  <div className="flex items-center gap-2 text-sm">
-    <Clock className="w-4 h-4 text-gray-300" /> Duración
-  </div>
-  <div className="flex items-center gap-2 text-sm">
-    <RotateCcw className="w-4 h-4 text-gray-300" /> Descanso
-  </div>
-  <div className="flex items-center gap-2 text-sm">
-    <StickyNote className="w-4 h-4 text-gray-300" /> Notas de entrenador
-  </div>
-</aside>
+    <div className="min-h-screen p-4">
+      {/* Modal de confirmación */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gray-800 rounded-2xl p-6 max-w-md w-full border border-gray-700  "
+          >
+            <h3 className="text-xl font-bold mb-4 cursor-pointer">
+              Confirmar eliminación
+            </h3>
+            <p className="text-gray-300 mb-6 cursor-pointer ">
+              ¿Estás seguro de eliminar "{deleteConfirm.name}"?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition text-white cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition text-white font-medium cursor-pointer"
+              >
+                Eliminar
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
-        {/* === Panel principal === */}
-        <div className="flex-1">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-6">
+        {/* Sidebar */}
+        <aside className="md:w-48 w-full self-start space-y-4 bg-gray-800/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/50">
+          <h3 className="font-semibold text-lg text-gray-100">Guía</h3>
+          <div className="flex items-center gap-2 text-sm">
+            <Repeat className="w-4 h-4 text-gray-300" /> Repeticiones
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Clock className="w-4 h-4 text-gray-300" /> Duración
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <RotateCcw className="w-4 h-4 text-gray-300" /> Descanso
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <StickyNote className="w-4 h-4 text-gray-300" /> Notas
+          </div>
+        </aside>
 
+        {/* Main Panel */}
+        <div className="flex-1 flex flex-col gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8"
+            className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 md:p-8 flex flex-col gap-6"
           >
-            <h2 className="text-3xl font-bold mb-6 text-center">
-              Exercise Management
-              {clientName && (
-                <span className="text-blue-400"> - {clientName}</span>
-              )}
-            </h2>
+            {/* Botón volver y título cuando es propClientId */}
+            {propClientId && onBack && (
+              <div className="flex items-center justify-between mb-2">
+                <button
+                  onClick={onBack}
+                  className="text-blue-500 hover:text-blue-400 transition-colors flex items-center gap-2 cursor-pointer"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                  Volver a clientes
+                </button>
+              </div>
+            )}
+
+            {propClientId && clientName && (
+              <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-100">
+                Gestión ejercicios{" "}
+                <span className="text-blue-400">{clientName}</span>
+              </h2>
+            )}
+
             {!propClientId && (
-              <div className="mb-6">
-                <label className="block font-medium mb-2 text-gray-100">Select Client</label>
+              <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-100">
+                Gestión de ejercicios
+              </h2>
+            )}
+
+            {!propClientId && (
+              <div>
+                <label className="block font-medium mb-2 text-gray-100">
+                  Selecciona cliente
+                </label>
                 <select
-                  className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white"
                   value={clientId}
                   onChange={(e) => setClientId(e.target.value)}
                 >
-                  <option value="">-- Choose a client --</option>
+                  <option value="">-- Selecciona --</option>
                   {clients.map((c) => (
                     <option key={c.id_cliente} value={c.id_cliente}>
                       {c.profiles.name}
@@ -319,12 +490,13 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
 
             {clientId && (
               <>
-                <div className="flex gap-3 mb-6 justify-center">
+                {/* Días */}
+                <div className="flex flex-wrap gap-3 justify-center mb-4">
                   {[1, 2, 3, 4, 5].map((d) => (
                     <button
                       key={d}
                       onClick={() => setDay(d)}
-                      className={`px-5 py-2 rounded-lg font-medium transition-all duration-200 ${
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                         d === day
                           ? "bg-blue-600 text-white"
                           : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white cursor-pointer"
@@ -335,132 +507,213 @@ export default function ClientExercisesAdmin({ clientId: propClientId }) {
                   ))}
                 </div>
 
+                {/* Ejercicios por tipo */}
                 {loading ? (
-                  <p className="text-center text-gray-400">Loading...</p>
-                ) : exercises.length === 0 ? (
-                  <p className="text-center text-gray-400">No exercises available.</p>
+                  <p className="text-center text-gray-400">Cargando...</p>
+                ) : Object.keys(exercises).length === 0 ? (
+                  <p className="text-center text-gray-400">
+                    No hay ejercicios para este día
+                  </p>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {exercises.map((ex) => (
-                      <motion.div
-                        key={ex.id}
-                        whileHover={{ scale: 1.02 }}
-                        className="relative border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-transparent opacity-50"></div>
-                        {editing === ex.id ? (
-                          <div className="space-y-4 relative z-10">
-                            <input
-                              placeholder="Reps"
-                              className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              value={editValues.n_reps}
+                  Object.entries(exercises).map(([tipo, exGroup]) => (
+                    <div key={tipo} className="mb-6">
+                      <h3 className="text-xl md:text-2xl font-bold text-blue-400 mb-3 capitalize">
+                        {tipo}
+                      </h3>
+
+                      {/* Comentario bloque */}
+                      <div className="mb-4 bg-gray-900/70 p-3 rounded-xl border border-gray-700/50">
+                        {editingComment === tipo ? (
+                          <div className="space-y-2">
+                            <textarea
+                              className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2"
+                              rows={3}
+                              value={editCommentValue}
                               onChange={(e) =>
-                                setEditValues({ ...editValues, n_reps: e.target.value })
+                                setEditCommentValue(e.target.value)
                               }
-                            />
-                            <input
-                              placeholder="Duration"
-                              className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              value={editValues.duracion}
-                              onChange={(e) =>
-                                setEditValues({ ...editValues, duracion: e.target.value })
-                              }
-                            />
-                            <input
-                              placeholder="Rest"
-                              className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              value={editValues.descanso}
-                              onChange={(e) =>
-                                setEditValues({ ...editValues, descanso: e.target.value })
-                              }
-                            />
-                            <input
-                              placeholder="Description"
-                              className="w-full border border-gray-600 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              value={editValues.descripcion}
-                              onChange={(e) =>
-                                setEditValues({
-                                  ...editValues,
-                                  descripcion: e.target.value,
-                                })
-                              }
+                              placeholder="Escribe un comentario para este bloque..."
                             />
                             <button
-                              onClick={() => saveEdit(ex.id)}
-                              className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200"
-                              aria-label="Save exercise changes"
+                              onClick={() => saveComment(tipo)}
+                              className="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700"
                             >
-                              Save
+                              Guardar comentario
                             </button>
                           </div>
                         ) : (
-                          <>
-                            <p className="font-semibold text-lg text-gray-100 relative z-10">
-                              {ex.catalogo_ejercicios?.nombre}
+                          <div className="flex justify-between items-start">
+                            <p className="text-gray-300 italic">
+                              {comments[tipo]?.comentario ||
+                                "El entrenador no tiene comentarios para este bloque"}
                             </p>
-                            <div className="mt-3 space-y-2 text-sm relative z-10">
-                              {ex.n_reps && (
-                                <div className="flex items-center gap-3">
-                                  <Repeat className="w-4 h-4 text-gray-300" />
-                                  <span>{ex.n_reps}</span>
-                                </div>
-                              )}
-                              {ex.duracion && (
-                                <div className="flex items-center gap-3">
-                                  <Clock className="w-4 h-4 text-gray-300" />
-                                  <span>{ex.duracion}</span>
-                                </div>
-                              )}
-                              {ex.descanso && (
-                                <div className="flex items-center gap-3">
-                                  <RotateCcw className="w-4 h-4 text-gray-300" />
-                                  <span>{ex.descanso}</span>
-                                </div>
-                              )}
-                              {ex.descripcion && (
-                                <div className="flex items-center gap-3">
-                                  <StickyNote className="w-4 h-4 text-gray-300" />
-                                  <span>{ex.descripcion}</span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="absolute top-3 right-3 flex gap-2 z-10">
-                              <button
-                                onClick={() => startEdit(ex)}
-                                className="text-blue-400 hover:text-blue-300"
-                                aria-label={`Edit exercise ${ex.catalogo_ejercicios?.nombre}`}
-                              >
-                                <Edit2 className="w-5 h-5" />
-                              </button>
-                              <button
-                                onClick={() => deleteExercise(ex.id)}
-                                className="text-red-400 hover:text-red-300"
-                                aria-label={`Delete exercise ${ex.catalogo_ejercicios?.nombre}`}
-                              >
-                                <Trash2 className="w-5 h-5" />
-                              </button>
-                            </div>
-                          </>
+                            <button
+                              onClick={() => startEditComment(tipo)}
+                              className="text-blue-400 hover:text-blue-300"
+                            >
+                              <MessageSquare className="w-5 h-5 cursor-pointer" />
+                            </button>
+                          </div>
                         )}
-                      </motion.div>
-                    ))}
-                  </div>
+                      </div>
+
+                      {/* Lista de ejercicios */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {exGroup.map((ex) => (
+                          <motion.div
+                            key={ex.id}
+                            whileHover={{ scale: 1.02 }}
+                            className="relative border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-4 flex flex-col gap-2"
+                          >
+                            {ex.catalogo_ejercicios?.imagen && (
+                              <img
+                                src={ex.catalogo_ejercicios.imagen}
+                                alt={ex.catalogo_ejercicios.nombre}
+                                className="w-full h-32 md:h-40 object-cover rounded-lg mb-2"
+                              />
+                            )}
+
+                            {editing === ex.id ? (
+                              <div className="space-y-2">
+                                {/* Inputs de edición */}
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex justify-between items-center">
+                                  <p className="font-semibold text-gray-100">
+                                    {ex.catalogo_ejercicios?.nombre}
+                                  </p>
+                                  <div className="flex gap-2">
+                                    <Edit2
+                                      className="w-5 h-5 text-blue-400 hover:text-blue-300 cursor-pointer"
+                                      onClick={() => startEdit(ex)}
+                                    />
+                                    <Trash2
+                                      className="w-5 h-5 text-red-400 hover:text-red-300 cursor-pointer"
+                                      onClick={() =>
+                                        deleteExercise(
+                                          ex.id,
+                                          ex.catalogo_ejercicios?.nombre
+                                        )
+                                      }
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1 text-sm mt-1">
+                                  {ex.n_reps && (
+                                    <div className="flex items-center gap-2">
+                                      <Repeat className="w-4 h-4 text-gray-300" />
+                                      <span>{ex.n_reps}</span>
+                                    </div>
+                                  )}
+                                  {ex.duracion && (
+                                    <div className="flex items-center gap-2">
+                                      <Clock className="w-4 h-4 text-gray-300" />
+                                      <span>{ex.duracion}</span>
+                                    </div>
+                                  )}
+                                  {ex.descanso && (
+                                    <div className="flex items-center gap-2">
+                                      <RotateCcw className="w-4 h-4 text-gray-300" />
+                                      <span>{ex.descanso}</span>
+                                    </div>
+                                  )}
+                                  {ex.descripcion && (
+                                    <div className="flex items-center gap-2">
+                                      <StickyNote className="w-4 h-4 text-gray-300" />
+                                      <span>{ex.descripcion}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
                 )}
 
+                {/* Botones añadir */}
+                <div className="flex flex-wrap gap-3 justify-center mt-4">
+                  {!showCatalog && !showSessions && (
+                    <>
+                      <button
+                        onClick={() => setShowCatalog(true)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
+                      >
+                        Añadir desde catálogo
+                      </button>
+                      <button
+                        onClick={() => fetchTrainerSessions()}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 cursor-pointer"
+                      >
+                        Añadir desde sesiones
+                      </button>
+                    </>
+                  )}
+                  {showCatalog && (
+                    <button
+                      onClick={() => setShowCatalog(false)}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 cursor-pointer"
+                    >
+                      Cancelar catálogo
+                    </button>
+                  )}
+                  {showSessions && (
+                    <button
+                      onClick={() => setShowSessions(false)}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 cursor-pointer"
+                    >
+                      Cancelar sesiones
+                    </button>
+                  )}
+                </div>
+
                 {/* Catálogo */}
-                <ExerciseCatalog
-                  catalog={catalog}
-                  showAddForm={showAddForm}
-                  handleAddClick={handleAddClick}
-                  formValues={formValues}
-                  setFormValues={setFormValues}
-                  addExercise={addExercise}
-                />
+                {showCatalog && (
+                  <ExerciseCatalog
+                    catalog={catalog}
+                    showAddForm={showAddForm}
+                    handleAddClick={handleAddClick}
+                    formValues={formValues}
+                    setFormValues={setFormValues}
+                    addExercise={addExercise}
+                  />
+                )}
+
+                {/* Sesiones */}
+                {showSessions && (
+                  <div className="bg-gray-900 p-3 rounded-xl border border-gray-700/50 mt-4">
+                    {loadingSessions ? (
+                      <p className="text-gray-400">Cargando sesiones...</p>
+                    ) : sessions.length === 0 ? (
+                      <p className="text-gray-400">
+                        No hay sesiones disponibles
+                      </p>
+                    ) : (
+                      sessions.map((sess) => (
+                        <div
+                          key={sess.id}
+                          className="flex justify-between items-center border-b border-gray-700 py-2 cursor-pointer"
+                        >
+                          <span className="text-gray-200">{sess.nombre}</span>
+                          <button
+                            onClick={() => addSessionToClient(sess)}
+                            className="px-3 py-1 bg-green-600 rounded-lg hover:bg-green-700 text-white transition cursor-pointer"
+                          >
+                            Añadir
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </>
             )}
           </motion.div>
         </div>
-       
       </div>
     </div>
   );

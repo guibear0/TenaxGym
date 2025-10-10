@@ -2,17 +2,31 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
-import { Info, Clock, Repeat, RotateCcw, Zap, PlayCircle, HeartPulse, Scale, BicepsFlexed, StickyNote, X } from "lucide-react";
+import {
+  Clock,
+  Repeat,
+  RotateCcw,
+  Zap,
+  PlayCircle,
+  HeartPulse,
+  Scale,
+  BicepsFlexed,
+  StickyNote,
+  X,
+  ImageUpscale,
+} from "lucide-react";
 
 export default function ClientExercises({ day }) {
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [comments, setComments] = useState({});
+
   const userProfile = JSON.parse(localStorage.getItem("userProfile"));
   const clientId = userProfile?.id;
-  const userName = userProfile?.name || "";
 
+  // === Traer ejercicios y comentarios ===
   useEffect(() => {
     const fetchExercises = async () => {
       setLoading(true);
@@ -33,18 +47,59 @@ export default function ClientExercises({ day }) {
         setLoading(false);
       }
     };
+
+    const fetchComments = async () => {
+      if (!clientId) return;
+      try {
+        const { data, error } = await supabase
+          .from("comentarios_bloque")
+          .select("*")
+          .eq("client_id", clientId)
+          .eq("numero_dia", day);
+
+        if (error) throw error;
+
+        const typeMapping = {
+          CALENTAMIENTO: "Calentamiento",
+          BLOQUE_FUERZA: "Fuerza",
+          ESTABILIDAD_CARDIO: "Estabilidad",
+          CARDIO: "Cardio",
+        };
+
+        const map = {};
+        data.forEach((c) => {
+          const uiType = typeMapping[c.tipo] || "Otros";
+          // Solo el último comentario por tipo
+          map[uiType] = c.comentario;
+        });
+
+        setComments(map);
+      } catch (err) {
+        console.log("Error fetching comments:", err.message);
+      }
+    };
+
     fetchExercises();
+    fetchComments();
   }, [clientId, day]);
 
-  if (loading) return <p className="text-center mt-20 text-gray-400">Cargando ejercicios</p>;
+  if (loading)
+    return (
+      <p className="text-center mt-20 text-gray-400">Cargando ejercicios</p>
+    );
   if (error) return <p className="text-center mt-20 text-red-400">{error}</p>;
-  if (exercises.length === 0) return <p className="text-center mt-20 text-gray-400">No hay ejercicios para hoy.</p>;
+  if (exercises.length === 0)
+    return (
+      <p className="text-center mt-20 text-gray-400">
+        No hay ejercicios para hoy.
+      </p>
+    );
 
   const typeMapping = {
-    "CALENTAMIENTO": "Calentamiento",
-    "BLOQUE_FUERZA": "Fuerza",
-    "ESTABILIDAD_CARDIO": "Estabilidad",
-    "CARDIO": "Cardio",
+    CALENTAMIENTO: "Calentamiento",
+    BLOQUE_FUERZA: "Fuerza",
+    ESTABILIDAD_CARDIO: "Estabilidad",
+    CARDIO: "Cardio",
   };
 
   const groupedByType = exercises.reduce((acc, ex) => {
@@ -56,19 +111,19 @@ export default function ClientExercises({ day }) {
   }, {});
 
   const typeColors = {
-    "Calentamiento": "border-yellow-600",
-    "Fuerza": "border-orange-500",
-    "Estabilidad": "border-fuchsia-800",
-    "Cardio": "border-red-600",
-    "Otros": "border-gray-600",
+    Calentamiento: "border-yellow-600",
+    Fuerza: "border-orange-500",
+    Estabilidad: "border-fuchsia-800",
+    Cardio: "border-red-600",
+    Otros: "border-gray-600",
   };
 
   const typeIcons = {
-    "Calentamiento": Zap,
-    "Fuerza": BicepsFlexed,
-    "Estabilidad": Scale,
-    "Cardio": HeartPulse,
-    "Otros": PlayCircle,
+    Calentamiento: Zap,
+    Fuerza: BicepsFlexed,
+    Estabilidad: Scale,
+    Cardio: HeartPulse,
+    Otros: PlayCircle,
   };
 
   const order = ["Calentamiento", "Fuerza", "Estabilidad", "Cardio"];
@@ -78,7 +133,7 @@ export default function ClientExercises({ day }) {
     { icon: Clock, label: "Duración", color: "text-green-500" },
     { icon: RotateCcw, label: "Descanso", color: "text-purple-500" },
     { icon: StickyNote, label: "Descripción", color: "text-gray-500" },
-    { icon: Info, label: "Ver Imagen", color: "text-blue-400" },
+    { icon: ImageUpscale, label: "Ver Imagen", color: "text-blue-400" },
   ];
 
   return (
@@ -93,7 +148,10 @@ export default function ClientExercises({ day }) {
           {/* Icon Guide */}
           <div className="flex flex-wrap gap-6">
             {iconGuide.map(({ icon: Icon, label, color }) => (
-              <div key={label} className="flex items-center gap-2 text-gray-100">
+              <div
+                key={label}
+                className="flex items-center gap-2 text-gray-100"
+              >
                 <Icon className={`w-4 h-4 ${color}`} />
                 <span className="text-sm">{label}</span>
               </div>
@@ -108,10 +166,21 @@ export default function ClientExercises({ day }) {
 
             return (
               <div key={type}>
-                <h3 className={`text-lg font-semibold mb-4 pl-4 py-2 rounded-r-lg flex items-center gap-2 bg-gray-800/80 border-l-4 ${colorClass}`}>
+                <h3
+                  className={`text-lg font-semibold mb-2 pl-4 py-2 rounded-r-lg flex items-center gap-2 bg-gray-800/80 border-l-4 ${colorClass}`}
+                >
                   <IconComponent className="w-5 h-5 text-gray-300" />
                   {type}
                 </h3>
+
+                {/* Comentario del entrenador */}
+                <div className="mb-4 bg-gray-900/70 p-4 rounded-xl border border-gray-700/50">
+                  <p className="text-gray-300 italic">
+                    {" "}
+                    {comments[type] || "Sin comentarios del entrenador"}
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <AnimatePresence>
                     {exList.map((ex, idx) => (
@@ -120,44 +189,57 @@ export default function ClientExercises({ day }) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        transition={{ delay: idx * 0.05, type: "spring", stiffness: 200, damping: 20 }}
+                        transition={{
+                          delay: idx * 0.05,
+                          type: "spring",
+                          stiffness: 200,
+                          damping: 20,
+                        }}
                         whileHover={{ scale: 1.03, y: -3 }}
                         className="relative bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-5 hover:border-blue-500 transition-all duration-200"
                       >
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-transparent opacity-50"></div>
                         <div className="relative z-10 flex justify-between items-start">
                           <div className="flex-1">
-                            <p className="font-semibold text-gray-100">{ex.catalogo_ejercicios?.nombre}</p>
+                            <p className="font-semibold text-gray-100">
+                              {ex.catalogo_ejercicios?.nombre}
+                            </p>
                             <div className="flex flex-wrap gap-3 mt-3 text-sm text-gray-300">
                               {ex.n_reps && (
                                 <div className="flex items-center gap-2">
-                                  <Repeat className="w-4 h-4 text-yellow-500" /> {ex.n_reps}
+                                  <Repeat className="w-4 h-4 text-yellow-500" />{" "}
+                                  {ex.n_reps}
                                 </div>
                               )}
                               {ex.duracion && (
                                 <div className="flex items-center gap-2">
-                                  <Clock className="w-4 h-4 text-green-500" /> {ex.duracion}
+                                  <Clock className="w-4 h-4 text-green-500" />{" "}
+                                  {ex.duracion}
                                 </div>
                               )}
                               {ex.descanso && (
                                 <div className="flex items-center gap-2">
-                                  <RotateCcw className="w-4 h-4 text-purple-500" /> {ex.descanso}
+                                  <RotateCcw className="w-4 h-4 text-purple-500" />{" "}
+                                  {ex.descanso}
                                 </div>
                               )}
                               {ex.descripcion && (
                                 <div className="flex items-center gap-2">
-                                  <StickyNote className="w-4 h-4 text-gray-500" /> {ex.descripcion}
+                                  <StickyNote className="w-4 h-4 text-gray-500" />{" "}
+                                  {ex.descripcion}
                                 </div>
                               )}
                             </div>
                           </div>
                           {ex.catalogo_ejercicios?.imagen && (
                             <button
-                              onClick={() => setSelectedImage(ex.catalogo_ejercicios.imagen)}
+                              onClick={() =>
+                                setSelectedImage(ex.catalogo_ejercicios.imagen)
+                              }
                               className="ml-3 text-blue-400 hover:text-blue-300"
-                              aria-label={`View image for ${ex.catalogo_ejercicios?.nombre}`}
+                              aria-label={`Ver imagen de ${ex.catalogo_ejercicios?.nombre}`}
                             >
-                              <Info className="w-5 h-5" />
+                              <ImageUpscale className="w-5 h-5" />
                             </button>
                           )}
                         </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, UserCog } from "lucide-react";
+import { User, UserCog, NotebookTabs, CalendarSync } from "lucide-react";
 import CardBox from "../../../components/ui/CardBox";
 import Navbar from "../../../components/ui/NavBar";
 
@@ -56,11 +56,19 @@ export default function TrainerDashboard() {
     },
     {
       title: "Catálogo de Ejercicios",
-      icon: <UserCog size={48} />,
+      icon: <NotebookTabs size={48} />,
       description: "Añade y gestiona los ejercicios disponibles",
       onClick: () => navigate("/catalog"),
       bgColor: "bg-purple-600",
-      hoverColor: "hhover:bg-purple-700",
+      hoverColor: "hover:bg-purple-700",
+    },
+    {
+      title: "Sesiones",
+      icon: <CalendarSync size={48} />,
+      description: "Añade y gestiona los ejercicios disponibles",
+      onClick: () => navigate("/sessions"),
+      bgColor: "bg-amber-600 ",
+      hoverColor: "hover:bg-amber-700",
     },
   ];
 
@@ -70,7 +78,8 @@ export default function TrainerDashboard() {
       {/* Header Section */}
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-          {greeting}{userName ? `, ${userName}!` : "!"} ¡Empodera a tus clientes!
+          {greeting}
+          {userName ? `, ${userName}!` : "!"} ¡Empodera a tus clientes!
         </h1>
         <p className="mt-4 text-lg text-gray-300 italic">"{quote}"</p>
       </div>

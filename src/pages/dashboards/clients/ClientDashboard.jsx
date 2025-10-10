@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Activity } from "lucide-react";
+import { User, Activity, Ruler, BookOpenCheck } from "lucide-react";
 import CardBox from "../../../components/ui/CardBox";
 import Navbar from "../../../components/ui/NavBar";
 
@@ -58,19 +58,20 @@ export default function ClientDashboard() {
     },
     {
       title: "Medidas Corporales",
-      icon: <Activity size={48} />,
+      icon: <Ruler size={48} />,
       description: "Registra y monitorea tus medidas corporales",
       onClick: () => navigate("/measures"),
       bgColor: "bg-purple-600",
       hoverColor: "hover:bg-purple-700",
     },
-     {
-      title: "Test de movilidad",
-      icon: <Activity size={48} />,
-      description: "Haz el test para obtener tu calificación de movilidad",
-      onClick: () => navigate("/mobility"),
-      bgColor: "bg-gray-600",
-      hoverColor: "hover:bg-gray-700",
+    {
+      title: "Tests",
+      icon: <BookOpenCheck size={48} />,
+      description:
+        "Haz los tests de fuerza y movilidad y registra tus progresos",
+      onClick: () => navigate("/tests"),
+      bgColor: "bg-orange-600",
+      hoverColor: "hover:bg-orange-700",
     },
   ];
 
@@ -78,11 +79,12 @@ export default function ClientDashboard() {
     <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white py-12">
       {/* Navbar */}
       <Navbar />
-      
+
       {/* Header Section */}
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-          {greeting}{userName ? `, ${userName}!` : "!"} ¡Vamos a movernos!
+          {greeting}
+          {userName ? `, ${userName}!` : "!"} ¡Vamos a movernos!
         </h1>
         <p className="mt-4 text-lg text-gray-300 italic">"{quote}"</p>
       </div>
