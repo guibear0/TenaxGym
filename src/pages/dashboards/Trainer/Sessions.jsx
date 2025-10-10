@@ -136,7 +136,7 @@ export default function Sessions() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white py-12 px-4">
-      <BackButton label="Volver al Dashboard" to="/trainer-dashboard" />
+      <BackButton label="Atrás" to="/trainer-dashboard" />
       <div className="max-w-5xl mx-auto">
         <h1 className="text-4xl font-extrabold mb-8 text-center">
           Sesiones de Ejercicios
