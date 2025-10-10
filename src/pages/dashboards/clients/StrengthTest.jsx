@@ -21,7 +21,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-
+//hola
 export default function StrengthTest() {
   const [resultados, setResultados] = useState([]);
   const [loading, setLoading] = useState(true);
