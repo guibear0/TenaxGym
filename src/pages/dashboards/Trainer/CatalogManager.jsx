@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../../lib/supabase";
 import { Trash2, PlusCircle, Edit3 } from "lucide-react";
 import BackButton from "../../../components/ui/BackButton";
@@ -24,9 +24,12 @@ export default function CatalogManager() {
     ESTABILIDAD_CARDIO: false,
     CARDIO: false,
   });
-
+  const [searchTerm, setSearchTerm] = useState("");
+  const catalogTitleRef = useRef(null);
   const userProfile = JSON.parse(localStorage.getItem("userProfile"));
   const userName = userProfile?.name || "";
+
+  const headerRef = useRef(null);
 
   const typeDisplayMapping = {
     CALENTAMIENTO: "Calentamiento",
@@ -42,7 +45,6 @@ export default function CatalogManager() {
     "CARDIO",
   ];
 
-  // Fetch catálogo
   useEffect(() => {
     const fetchCatalog = async () => {
       setLoading(true);
@@ -77,6 +79,16 @@ export default function CatalogManager() {
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
 
+  const normalize = (text) =>
+    text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+  const filteredCatalog = catalog.filter((item) =>
+    normalize(item.nombre).includes(normalize(searchTerm))
+  );
+
   const addExercise = async () => {
     if (!formValues.nombre || !formValues.tipo) {
       toast.dismiss();
@@ -88,7 +100,6 @@ export default function CatalogManager() {
         .from("catalogo_ejercicios")
         .insert([formValues]);
       if (error) throw error;
-
       setFormValues({
         nombre: "",
         tipo: "CALENTAMIENTO",
@@ -101,7 +112,6 @@ export default function CatalogManager() {
         .from("catalogo_ejercicios")
         .select("id, nombre, tipo, descripcion, imagen")
         .order("created_at", { ascending: true });
-
       setCatalog(data || []);
       toast.dismiss();
       toast.success("Ejercicio guardado correctamente");
@@ -125,7 +135,6 @@ export default function CatalogManager() {
           item.id === editingExercise.id ? { ...item, ...formValues } : item
         )
       );
-
       setEditingExercise(null);
       setFormValues({
         nombre: "",
@@ -133,7 +142,6 @@ export default function CatalogManager() {
         descripcion: "",
         imagen: "",
       });
-
       toast.dismiss();
       toast.success("Ejercicio actualizado correctamente");
     } catch (err) {
@@ -142,7 +150,6 @@ export default function CatalogManager() {
     }
   };
 
-  // Función para eliminar con confirmación usando toast
   const deleteExercise = (id, nombre) => {
     toast(
       (t) => (
@@ -163,21 +170,19 @@ export default function CatalogManager() {
                 toast.error("Error eliminando: " + err.message);
               }
             }}
-            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-md transition text-white text-sm font-medium"
+            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-md text-white text-sm font-medium"
           >
             Confirmar
           </button>
           <button
             onClick={() => toast.dismiss(t.id)}
-            className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 rounded-md transition text-white text-sm"
+            className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 rounded-md text-white text-sm"
           >
             Cancelar
           </button>
         </div>
       ),
-      {
-        duration: Infinity,
-      }
+      { duration: Infinity }
     );
   };
 
@@ -189,16 +194,39 @@ export default function CatalogManager() {
           {userName ? `Hola, ${userName}!` : "Hola!"} Organiza tu catálogo
         </h1>
 
-        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 md:p-8">
-          {/* Header con botón añadir */}
+        <div
+          className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 md:p-8"
+          ref={catalogTitleRef}
+        >
+          {/* Buscador */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Buscar ejercicio..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Header añadir */}
           <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <p className="text-sm text-gray-300">
-              Gestiona los ejercicios del catálogo.
-            </p>
+            <h1
+              className="text-3xl md:text-4xl font-extrabold mb-6 text-center"
+              ref={catalogTitleRef}
+            >
+              Gestiona los ejercicios del catálogo
+            </h1>
             <motion.button
               onClick={() => {
                 setShowAddForm(!showAddForm);
                 setEditingExercise(null);
+                // Hacer scroll al título después de abrir el formulario
+                setTimeout(() => {
+                  catalogTitleRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                  });
+                }, 100);
               }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition cursor-pointer"
             >
@@ -292,6 +320,78 @@ export default function CatalogManager() {
             </p>
           ) : error ? (
             <p className="text-center text-red-400 py-8">{error}</p>
+          ) : searchTerm ? (
+            <div>
+              <h4 className="text-lg font-semibold mb-4">
+                Resultados de búsqueda
+              </h4>
+              {filteredCatalog.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredCatalog.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      whileHover={{ scale: 1.01 }}
+                      className="relative bg-gray-900 rounded-2xl p-4 border border-gray-700/50 overflow-hidden"
+                    >
+                      <div className="relative z-10 flex justify-between items-start">
+                        <div className="pr-2">
+                          <p className="font-semibold text-gray-100">
+                            {item.nombre}
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            {typeDisplayMapping[item.tipo]}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              setEditingExercise(item);
+                              setFormValues({
+                                nombre: item.nombre || "",
+                                tipo: item.tipo || "CALENTAMIENTO",
+                                descripcion: item.descripcion || "",
+                                imagen: item.imagen || "",
+                              });
+                              setShowAddForm(true);
+                              setTimeout(() => {
+                                catalogTitleRef.current?.scrollIntoView({
+                                  behavior: "smooth",
+                                });
+                              }, 100);
+                            }}
+                            className="text-blue-400 hover:text-blue-300 cursor-pointer"
+                          >
+                            <Edit3 className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => deleteExercise(item.id, item.nombre)}
+                            className="text-red-600 hover:text-red-500 cursor-pointer"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                      {item.descripcion && (
+                        <p className="mt-3 text-gray-300 text-sm">
+                          {item.descripcion}
+                        </p>
+                      )}
+                      {item.imagen && (
+                        <img
+                          src={item.imagen}
+                          alt={item.nombre}
+                          className="mt-3 w-full h-36 object-cover rounded-lg"
+                        />
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-center">
+                  No se encontraron ejercicios.
+                </p>
+              )}
+            </div>
           ) : (
             groupedCatalog.map(
               (group) =>
@@ -333,7 +433,6 @@ export default function CatalogManager() {
                         ></path>
                       </svg>
                     </div>
-
                     <AnimatePresence>
                       {expandedSections[group.tipo] && (
                         <motion.div
@@ -349,60 +448,60 @@ export default function CatalogManager() {
                               whileHover={{ scale: 1.01 }}
                               className="relative bg-gray-900 rounded-2xl p-4 border border-gray-700/50 overflow-hidden"
                             >
-                              <div className="relative z-10">
-                                <div className="flex justify-between items-start">
-                                  <div className="pr-2">
-                                    <p className="font-semibold text-gray-100">
-                                      {item.nombre}
-                                    </p>
-                                    <p className="text-sm text-gray-400">
-                                      {typeDisplayMapping[item.tipo]}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <button
-                                      onClick={() => {
-                                        setEditingExercise(item);
-                                        setFormValues({
-                                          nombre: item.nombre || "",
-                                          tipo: item.tipo || "CALENTAMIENTO",
-                                          descripcion: item.descripcion || "",
-                                          imagen: item.imagen || "",
-                                        });
-                                        setShowAddForm(true);
-                                      }}
-                                      className="text-blue-400 hover:text-blue-300 cursor-pointer"
-                                      aria-label={`Editar ${item.nombre}`}
-                                    >
-                                      <Edit3 className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        deleteExercise(item.id, item.nombre)
-                                      }
-                                      className="text-red-600 hover:text-red-500 cursor-pointer"
-                                      aria-label={`Eliminar ${item.nombre}`}
-                                    >
-                                      <Trash2 className="w-5 h-5" />
-                                    </button>
-                                  </div>
-                                </div>
-
-                                {item.descripcion && (
-                                  <p className="mt-3 text-gray-300 text-sm">
-                                    {item.descripcion}
+                              <div className="relative z-10 flex justify-between items-start">
+                                <div className="pr-2">
+                                  <p className="font-semibold text-gray-100">
+                                    {item.nombre}
                                   </p>
-                                )}
-                                {item.imagen && (
-                                  <img
-                                    src={item.imagen}
-                                    alt={item.nombre}
-                                    className="mt-3 w-full h-36 object-cover rounded-lg"
-                                  />
-                                )}
+                                  <p className="text-sm text-gray-400">
+                                    {typeDisplayMapping[item.tipo]}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    onClick={() => {
+                                      setEditingExercise(item);
+                                      setFormValues({
+                                        nombre: item.nombre || "",
+                                        tipo: item.tipo || "CALENTAMIENTO",
+                                        descripcion: item.descripcion || "",
+                                        imagen: item.imagen || "",
+                                      });
+                                      setShowAddForm(true);
+                                      setTimeout(() => {
+                                        catalogTitleRef.current?.scrollIntoView(
+                                          {
+                                            behavior: "smooth",
+                                          }
+                                        );
+                                      }, 100);
+                                    }}
+                                    className="text-blue-400 hover:text-blue-300 cursor-pointer"
+                                  >
+                                    <Edit3 className="w-5 h-5" />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      deleteExercise(item.id, item.nombre)
+                                    }
+                                    className="text-red-600 hover:text-red-500 cursor-pointer"
+                                  >
+                                    <Trash2 className="w-5 h-5" />
+                                  </button>
+                                </div>
                               </div>
-
-                              <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent pointer-events-none"></div>
+                              {item.descripcion && (
+                                <p className="mt-3 text-gray-300 text-sm">
+                                  {item.descripcion}
+                                </p>
+                              )}
+                              {item.imagen && (
+                                <img
+                                  src={item.imagen}
+                                  alt={item.nombre}
+                                  className="mt-3 w-full h-36 object-cover rounded-lg"
+                                />
+                              )}
                             </motion.div>
                           ))}
                         </motion.div>

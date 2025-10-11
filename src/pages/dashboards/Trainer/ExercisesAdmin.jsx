@@ -575,7 +575,65 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
 
                             {editing === ex.id ? (
                               <div className="space-y-2">
-                                {/* Inputs de edición */}
+                                <input
+                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2"
+                                  placeholder="Repeticiones"
+                                  value={editValues.n_reps}
+                                  onChange={(e) =>
+                                    setEditValues({
+                                      ...editValues,
+                                      n_reps: e.target.value,
+                                    })
+                                  }
+                                />
+                                <input
+                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2"
+                                  placeholder="Duración"
+                                  value={editValues.duracion}
+                                  onChange={(e) =>
+                                    setEditValues({
+                                      ...editValues,
+                                      duracion: e.target.value,
+                                    })
+                                  }
+                                />
+                                <input
+                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2"
+                                  placeholder="Descanso"
+                                  value={editValues.descanso}
+                                  onChange={(e) =>
+                                    setEditValues({
+                                      ...editValues,
+                                      descanso: e.target.value,
+                                    })
+                                  }
+                                />
+                                <textarea
+                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2"
+                                  rows={2}
+                                  placeholder="Descripción"
+                                  value={editValues.descripcion}
+                                  onChange={(e) =>
+                                    setEditValues({
+                                      ...editValues,
+                                      descripcion: e.target.value,
+                                    })
+                                  }
+                                />
+                                <div className="flex gap-2 justify-end">
+                                  <button
+                                    onClick={() => setEditing(null)}
+                                    className="px-3 py-1 bg-gray-600 rounded-lg hover:bg-gray-700 text-white"
+                                  >
+                                    Cancelar
+                                  </button>
+                                  <button
+                                    onClick={() => saveEdit(ex.id)}
+                                    className="px-3 py-1 bg-green-600 rounded-lg hover:bg-green-700 text-white"
+                                  >
+                                    Guardar
+                                  </button>
+                                </div>
                               </div>
                             ) : (
                               <>
