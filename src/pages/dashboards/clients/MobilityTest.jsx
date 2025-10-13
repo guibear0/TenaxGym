@@ -239,7 +239,7 @@ export default function MobilityTest() {
         <div className="flex justify-end mb-6">
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-all duration-200 font-medium"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-all duration-200 font-medium cursor-pointer"
           >
             <Plus className="w-5 h-5" />
             Registrar Marca
@@ -419,9 +419,9 @@ export default function MobilityTest() {
                                 </div>
                                 <button
                                   onClick={() => deleteResultado(r.id)}
-                                  className="text-red-400 hover:text-red-300 transition"
+                                  className="text-red-400 hover:text-red-300 transition cursor-pointer"
                                 >
-                                  <Trash2 className="w-5 h-5" />
+                                  <Trash2 className="w-5 h-5 " />
                                 </button>
                               </div>
                             )
@@ -450,7 +450,7 @@ export default function MobilityTest() {
                     setShowModal(false);
                     resetForm();
                   }}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
+                  className="absolute top-4 right-4 text-gray-400 hover:text-white transition "
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -623,13 +623,13 @@ export default function MobilityTest() {
                       setShowDeleteConfirm(false);
                       setDeleteTarget(null);
                     }}
-                    className="flex-1 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition"
+                    className="flex-1 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={confirmDelete}
-                    className="flex-1 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition font-medium"
+                    className="flex-1 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition font-medium cursor-pointer"
                   >
                     Eliminar
                   </button>
