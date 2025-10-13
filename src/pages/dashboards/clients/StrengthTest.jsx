@@ -169,7 +169,7 @@ export default function StrengthTest() {
         <div className="flex justify-end mb-6">
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-all duration-200 font-medium"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-all duration-200 font-medium cursor-pointer"
           >
             <Plus className="w-5 h-5" />
             Registrar Marca
@@ -284,7 +284,7 @@ export default function StrengthTest() {
                         }
                         className="ml-4 text-red-400 hover:text-red-300 transition"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 className="w-5 h-5 cursor-pointer" />
                       </button>
                     </div>
                   ))}
@@ -309,12 +309,12 @@ export default function StrengthTest() {
                     setShowModal(false);
                     resetForm();
                   }}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
+                  className="absolute top-4 right-4 text-gray-400 hover:text-white transition "
                 >
                   <X className="w-6 h-6" />
                 </button>
 
-                <h2 className="text-2xl font-bold mb-6">Registrar Marca</h2>
+                <h2 className="text-2xl font-bold mb-6 ">Registrar Marca</h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
