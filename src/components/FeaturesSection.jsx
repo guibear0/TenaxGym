@@ -1,23 +1,25 @@
 //eslint-disable-next-line
 import { motion } from "framer-motion";
-import { Dumbbell, Calendar, Scale } from "lucide-react";
+import { Dumbbell, Calendar, BarChart3 } from "lucide-react";
 import Card from "../components/ui/Card";
 
 const features = [
   {
     icon: Dumbbell,
     title: "Biblioteca de Ejercicios",
-    description: "Accede a cientos de ejercicios detallados para cada grupo muscular.",
+    description:
+      "Accede a cientos de ejercicios detallados para cada grupo muscular.",
   },
   {
-    icon: Scale,
+    icon: BarChart3,
     title: "Seguimiento de Progreso",
     description: "Registra tu peso, medidas y fotos para ver tu evolución.",
   },
   {
     icon: Calendar,
     title: "Calendario de Entrenamientos",
-    description: "Organiza tus rutinas y sesiones semanales de manera eficiente.",
+    description:
+      "Organiza tus rutinas y sesiones semanales de manera eficiente.",
   },
 ];
 
@@ -37,7 +39,8 @@ export default function FeaturesSection() {
             <span className="text-blue-400 block">alcanzar tus metas</span>
           </h2>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Todo lo que necesitas para gestionar tu entrenamiento y progreso con tu entrenador.
+            Todo lo que necesitas para gestionar tu entrenamiento y progreso con
+            tu entrenador.
           </p>
         </motion.div>
 
