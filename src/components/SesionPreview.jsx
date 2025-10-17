@@ -1,16 +1,21 @@
 // eslint-disable-next-line
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { Trash2, Pencil, X, Plus } from "lucide-react";
+import { Trash2, Pencil, X, Plus, Search, GripVertical } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 export default function SesionPreview({ session, onClose, updateSessionName }) {
+  if (!session) return null;
+
   const [sessionName, setSessionName] = useState(session.nombre);
   const [editingSessionName, setEditingSessionName] = useState(false);
   const [exercises, setExercises] = useState([]);
   const [catalogExercises, setCatalogExercises] = useState([]);
   const [editingExerciseId, setEditingExerciseId] = useState(null);
   const [exerciseValues, setExerciseValues] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [draggedId, setDraggedId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
 
   useEffect(() => {
     fetchSessionExercises();
@@ -95,6 +100,53 @@ export default function SesionPreview({ session, onClose, updateSessionName }) {
     }
   };
 
+  const handleDragStart = (e, exerciseId) => {
+    setDraggedId(exerciseId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e, targetId) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverId(targetId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverId(null);
+  };
+
+  const handleDrop = async (e, targetId) => {
+    e.preventDefault();
+    setDragOverId(null);
+
+    if (draggedId === targetId) return;
+
+    const draggedIndex = exercises.findIndex((ex) => ex.id === draggedId);
+    const targetIndex = exercises.findIndex((ex) => ex.id === targetId);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const newExercises = [...exercises];
+    const [draggedExercise] = newExercises.splice(draggedIndex, 1);
+    newExercises.splice(targetIndex, 0, draggedExercise);
+
+    setExercises(newExercises);
+
+    try {
+      for (let i = 0; i < newExercises.length; i++) {
+        await supabase
+          .from("sesion_ejercicios")
+          .update({ orden: i + 1 })
+          .eq("id", newExercises[i].id);
+      }
+      toast.success("Orden actualizado");
+    } catch (err) {
+      toast.error("Error actualizando orden: " + err.message);
+    }
+
+    setDraggedId(null);
+  };
+
   const addExerciseToSession = async (catalog) => {
     try {
       const { data, error } = await supabase
@@ -123,6 +175,12 @@ export default function SesionPreview({ session, onClose, updateSessionName }) {
 
   const availableCatalog = catalogExercises.filter(
     (c) => !exercises.some((e) => e.catalogo_id === c.id)
+  );
+
+  const filteredCatalog = availableCatalog.filter(
+    (cat) =>
+      cat.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cat.tipo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -196,13 +254,24 @@ export default function SesionPreview({ session, onClose, updateSessionName }) {
               {ejerciciosPorTipo.map((ex) => (
                 <div
                   key={ex.id}
-                  className="p-2 border border-gray-700 rounded-lg mt-1 relative"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, ex.id)}
+                  onDragOver={(e) => handleDragOver(e, ex.id)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, ex.id)}
+                  className={`p-2 border rounded-lg mt-1 relative cursor-move transition ${
+                    draggedId === ex.id
+                      ? "opacity-50 border-blue-500 bg-blue-900/20"
+                      : dragOverId === ex.id
+                        ? "border-green-500 bg-green-900/20"
+                        : "border-gray-700"
+                  }`}
                 >
                   {editingExerciseId === ex.id ? (
                     <div className="flex gap-2 flex-wrap">
                       <input
                         type="text"
-                        value={exerciseValues.n_reps}
+                        value={exerciseValues.n_reps || ""}
                         onChange={(e) =>
                           setExerciseValues((prev) => ({
                             ...prev,
@@ -214,7 +283,7 @@ export default function SesionPreview({ session, onClose, updateSessionName }) {
                       />
                       <input
                         type="text"
-                        value={exerciseValues.duracion}
+                        value={exerciseValues.duracion || ""}
                         onChange={(e) =>
                           setExerciseValues((prev) => ({
                             ...prev,
@@ -226,7 +295,7 @@ export default function SesionPreview({ session, onClose, updateSessionName }) {
                       />
                       <input
                         type="text"
-                        value={exerciseValues.descanso}
+                        value={exerciseValues.descanso || ""}
                         onChange={(e) =>
                           setExerciseValues((prev) => ({
                             ...prev,
@@ -238,7 +307,7 @@ export default function SesionPreview({ session, onClose, updateSessionName }) {
                       />
                       <input
                         type="text"
-                        value={exerciseValues.descripcion}
+                        value={exerciseValues.descripcion || ""}
                         onChange={(e) =>
                           setExerciseValues((prev) => ({
                             ...prev,
@@ -262,24 +331,27 @@ export default function SesionPreview({ session, onClose, updateSessionName }) {
                       </button>
                     </div>
                   ) : (
-                    <div className="flex justify-between items-center">
-                      <span>
-                        {ex.catalogo_ejercicios.nombre} — {ex.n_reps} reps,{" "}
-                        {ex.duracion} seg, Descanso: {ex.descanso},{" "}
-                        {ex.descripcion}
-                      </span>
-                      <div className="flex gap-2 absolute top-2 right-2">
+                    <div className="flex justify-between items-center gap-2">
+                      <div className="flex items-center gap-2 flex-1">
+                        <GripVertical size={18} className="text-gray-500" />
+                        <span>
+                          {ex.catalogo_ejercicios.nombre} — {ex.n_reps} reps,{" "}
+                          {ex.duracion} seg, Descanso: {ex.descanso},{" "}
+                          {ex.descripcion}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
                         <button
                           onClick={() => startEditExercise(ex)}
                           className="text-blue-500 hover:text-blue-400 cursor-pointer transition"
                         >
-                          <Pencil />
+                          <Pencil size={18} />
                         </button>
                         <button
                           onClick={() => deleteExercise(ex.id)}
                           className="text-red-600 hover:text-red-500 cursor-pointer transition"
                         >
-                          <Trash2 />
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </div>
@@ -293,19 +365,39 @@ export default function SesionPreview({ session, onClose, updateSessionName }) {
 
       {/* Catálogo de ejercicios */}
       <div className="mt-8">
-        <h3 className="text-xl font-semibold mb-2">Catálogo de ejercicios</h3>
+        <h3 className="text-xl font-semibold mb-4">Catálogo de ejercicios</h3>
+
+        {/* Buscador */}
+        <div className="mb-4 relative">
+          <Search className="absolute left-3 top-3 text-gray-500" size={20} />
+          <input
+            type="text"
+            placeholder="Buscar ejercicios por nombre o tipo..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-900 text-white border border-gray-600 focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        {filteredCatalog.length === 0 && searchTerm && (
+          <p className="text-gray-400 text-center">
+            No se encontraron ejercicios
+          </p>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {availableCatalog.map((cat) => (
+          {filteredCatalog.map((cat) => (
             <div
               key={cat.id}
-              className="p-2 border border-gray-700 rounded-lg flex justify-between items-center"
+              className="p-2 border border-gray-700 rounded-lg flex justify-between items-center hover:border-gray-600 transition"
             >
-              <span>
-                {cat.nombre} — {cat.tipo}
-              </span>
+              <div className="flex-1">
+                <span className="font-medium">{cat.nombre}</span>
+                <div className="text-sm text-gray-400">{cat.tipo}</div>
+              </div>
               <button
                 onClick={() => addExerciseToSession(cat)}
-                className="text-green-500 hover:text-green-400 cursor-pointer transition"
+                className="text-green-500 hover:text-green-400 cursor-pointer transition ml-2"
               >
                 <Plus />
               </button>

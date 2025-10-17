@@ -10,6 +10,7 @@ import {
   Trash2,
   Edit2,
   MessageSquare,
+  Trash,
 } from "lucide-react";
 
 import { toast } from "react-hot-toast";
@@ -43,6 +44,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
   const [sessions, setSessions] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
 
   const userProfile = JSON.parse(localStorage.getItem("userProfile"));
 
@@ -236,6 +238,13 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
     setFormValues({ n_reps: "", duracion: "", descanso: "", descripcion: "" });
   };
 
+  const handleFormChange = (field, value) => {
+    setFormValues((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const addExercise = async (catalogId) => {
     try {
       // Buscar el nombre del ejercicio en el catálogo
@@ -292,6 +301,24 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
     }
 
     setDeleteConfirm(null);
+  };
+
+  const deleteAllExercisesOfDay = async () => {
+    try {
+      const { error } = await supabase
+        .from("ejercicios_cliente")
+        .delete()
+        .eq("client_id", clientId)
+        .eq("numero_dia", day);
+
+      if (error) throw error;
+
+      setExercises({});
+      toast.success("Todos los ejercicios del día han sido eliminados");
+      setDeleteAllConfirm(false);
+    } catch (err) {
+      toast.error("Error al eliminar ejercicios: " + err.message);
+    }
   };
 
   const startEdit = (exercise) => {
@@ -372,7 +399,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
   // === RETURN ===
   return (
     <div className="min-h-screen p-4">
-      {/* Modal de confirmación */}
+      {/* Modal de confirmación eliminar un ejercicio */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ">
           <motion.div
@@ -398,6 +425,39 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition text-white font-medium cursor-pointer"
               >
                 Eliminar
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Modal de confirmación borrar todo del día */}
+      {deleteAllConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gray-800 rounded-2xl p-6 max-w-md w-full border border-gray-700  "
+          >
+            <h3 className="text-xl font-bold mb-4 cursor-pointer">
+              Eliminar todos los ejercicios
+            </h3>
+            <p className="text-gray-300 mb-6 cursor-pointer ">
+              ¿Estás seguro de que quieres eliminar TODOS los ejercicios del Día{" "}
+              {day}? Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteAllConfirm(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition text-white cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={deleteAllExercisesOfDay}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition text-white font-medium cursor-pointer"
+              >
+                Eliminar todos
               </button>
             </div>
           </motion.div>
@@ -506,6 +566,17 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
                     </button>
                   ))}
                 </div>
+
+                {/* Botón borrar todo del día */}
+                {Object.keys(exercises).length > 0 && (
+                  <button
+                    onClick={() => setDeleteAllConfirm(true)}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition mx-auto"
+                  >
+                    <Trash size={18} />
+                    Borrar todos los ejercicios del día
+                  </button>
+                )}
 
                 {/* Ejercicios por tipo */}
                 {loading ? (
@@ -731,14 +802,98 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
 
                 {/* Catálogo */}
                 {showCatalog && (
-                  <ExerciseCatalog
-                    catalog={catalog}
-                    showAddForm={showAddForm}
-                    handleAddClick={handleAddClick}
-                    formValues={formValues}
-                    setFormValues={setFormValues}
-                    addExercise={addExercise}
-                  />
+                  <div className="bg-gray-900 p-4 rounded-xl border border-gray-700/50 mt-4">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-100">
+                      Selecciona un ejercicio del catálogo
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {catalog.map((cat) => (
+                        <motion.div
+                          key={cat.id}
+                          className="border border-gray-700 rounded-lg p-4 bg-gray-800"
+                        >
+                          {cat.imagen && (
+                            <img
+                              src={cat.imagen}
+                              alt={cat.nombre}
+                              className="w-full h-32 object-cover rounded-lg mb-3"
+                            />
+                          )}
+                          <h4 className="font-semibold text-gray-100 mb-2">
+                            {cat.nombre}
+                          </h4>
+                          <p className="text-sm text-gray-400 mb-3">
+                            {cat.tipo}
+                          </p>
+
+                          {showAddForm === cat.id ? (
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                placeholder="Repeticiones (ej: 3x10)"
+                                value={formValues.n_reps}
+                                onChange={(e) =>
+                                  handleFormChange("n_reps", e.target.value)
+                                }
+                                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white p-2 text-sm"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Duración (ej: 45 seg)"
+                                value={formValues.duracion}
+                                onChange={(e) =>
+                                  handleFormChange("duracion", e.target.value)
+                                }
+                                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white p-2 text-sm"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Descanso (ej: 60 seg)"
+                                value={formValues.descanso}
+                                onChange={(e) =>
+                                  handleFormChange("descanso", e.target.value)
+                                }
+                                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white p-2 text-sm"
+                              />
+                              <textarea
+                                placeholder="Descripción (opcional)"
+                                value={formValues.descripcion}
+                                onChange={(e) =>
+                                  handleFormChange(
+                                    "descripcion",
+                                    e.target.value
+                                  )
+                                }
+                                rows={2}
+                                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white p-2 text-sm"
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => addExercise(cat.id)}
+                                  className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition text-sm font-medium cursor-pointer"
+                                >
+                                  Añadir
+                                </button>
+                                <button
+                                  onClick={() => setShowAddForm(null)}
+                                  className="flex-1 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition text-sm font-medium cursor-pointer"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleAddClick(cat.id)}
+                              className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm font-medium cursor-pointer"
+                            >
+                              Seleccionar
+                            </button>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
                 {/* Sesiones */}
