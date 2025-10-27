@@ -81,7 +81,7 @@ export default function MobilityTest() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedExercise || !marca || !fecha) {
+    if (!selectedCategory || !selectedExercise || !marca || !fecha) {
       toast.error("Completa todos los campos obligatorios");
       return;
     }
@@ -90,6 +90,7 @@ export default function MobilityTest() {
       const newResult = {
         user_id: userId,
         tipo: "movilidad",
+        categoria: selectedCategory,
         ejercicio: selectedExercise,
         marca: parseFloat(marca),
         fecha,
@@ -155,12 +156,7 @@ export default function MobilityTest() {
     Object.keys(ejerciciosMovilidad).forEach((c) => (grouped[c] = {}));
 
     resultados.forEach((r) => {
-      const cat = Object.entries(ejerciciosMovilidad).find(([_, ejs]) =>
-        ejs.includes(r.ejercicio)
-      );
-      if (!cat) return;
-
-      const categoria = cat[0];
+      const categoria = r.categoria;
       const key = hasSideVariants(r.ejercicio)
         ? getBaseName(r.ejercicio)
         : r.ejercicio;
@@ -291,7 +287,6 @@ export default function MobilityTest() {
                           {ejercicio}
                         </h3>
 
-                        {/* Gráfico de evolución */}
                         {allData.length >= 2 && (
                           <div className="mb-4">
                             <div className="flex items-center gap-2 mb-2">
@@ -385,8 +380,6 @@ export default function MobilityTest() {
                           </div>
                         )}
 
-                        {/* Lista de registros */}
-                        {/* Lista estilo tarjeta personalizada */}
                         <div className="space-y-3">
                           {[...data.left, ...data.right, ...data.single].map(
                             (r) => (
@@ -436,6 +429,7 @@ export default function MobilityTest() {
           </div>
         )}
 
+        {/* Modal registrar */}
         <AnimatePresence>
           {showModal && (
             <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -561,46 +555,7 @@ export default function MobilityTest() {
           )}
         </AnimatePresence>
 
-        {/* Modal de confirmación de eliminación */}
-        <AnimatePresence>
-          {showDeleteConfirm && (
-            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-gray-800 rounded-2xl p-6 max-w-sm w-full border border-gray-700"
-              >
-                <h3 className="text-xl font-bold mb-4 text-white">
-                  Confirmar eliminación
-                </h3>
-                <p className="text-gray-300 mb-6">
-                  ¿Estás seguro de que deseas eliminar esta marca? Esta acción
-                  no se puede deshacer.
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setShowDeleteConfirm(false);
-                      setDeleteTarget(null);
-                    }}
-                    className="flex-1 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={confirmDelete}
-                    className="flex-1 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition font-medium"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
-        {/* Modal de confirmación de eliminación */}
+        {/* Modal de confirmación eliminación */}
         <AnimatePresence>
           {showDeleteConfirm && (
             <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
