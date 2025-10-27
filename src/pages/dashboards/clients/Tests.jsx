@@ -15,8 +15,8 @@ export default function TestsPage() {
       description:
         "Registra tus marcas en ejercicios de fuerza (peso, repeticiones, etc.)",
       onClick: () => navigate("/tests/strength"),
-      bgColor: "bg-red-600",
-      hoverColor: "hover:bg-red-700",
+      bgColor: "#7f1d1d", // rojo oscuro armonizado
+      hoverColor: "#ef4444", // rojo brillante
     },
     {
       title: "Test de Movilidad",
@@ -24,8 +24,8 @@ export default function TestsPage() {
       description:
         "Mide tu elasticidad y movilidad articular con tests específicos",
       onClick: () => navigate("/tests/mobility"),
-      bgColor: "bg-teal-600",
-      hoverColor: "hover:bg-teal-700",
+      bgColor: "#064e3b", // verde oscuro armonizado
+      hoverColor: "#10b981", // verde brillante
     },
   ];
 

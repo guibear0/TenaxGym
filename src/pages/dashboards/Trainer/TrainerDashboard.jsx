@@ -43,32 +43,32 @@ export default function TrainerDashboard() {
       icon: <User size={48} />,
       description: "Visualiza y edita la información de tu perfil",
       onClick: () => navigate("/profile"),
-      bgColor: "bg-blue-600",
-      hoverColor: "hover:bg-blue-700",
+      bgColor: "#1e3a8a", // azul oscuro armonizado
+      hoverColor: "#3b82f6", // azul brillante
     },
     {
       title: "Clientes",
       icon: <UserCog size={48} />,
       description: "Visualiza y gestiona los entrenamientos de tus clientes",
       onClick: () => navigate("/clients"),
-      bgColor: "bg-teal-600",
-      hoverColor: "hover:bg-teal-700",
+      bgColor: "#064e3b", // verde oscuro armonizado
+      hoverColor: "#10b981", // verde brillante
     },
     {
       title: "Catálogo de Ejercicios",
       icon: <NotebookTabs size={48} />,
       description: "Añade y gestiona los ejercicios disponibles",
       onClick: () => navigate("/catalog"),
-      bgColor: "bg-purple-600",
-      hoverColor: "hover:bg-purple-700",
+      bgColor: "#4c1d95", // morado oscuro
+      hoverColor: "#9333ea", // morado brillante
     },
     {
       title: "Sesiones",
       icon: <CalendarSync size={48} />,
-      description: "Añade y gestiona los ejercicios disponibles",
+      description: "Añade y gestiona tus sesiones",
       onClick: () => navigate("/sessions"),
-      bgColor: "bg-amber-600 ",
-      hoverColor: "hover:bg-amber-700",
+      bgColor: "#78350f", // naranja oscuro armonizado
+      hoverColor: "#fb923c", // naranja brillante
     },
   ];
 

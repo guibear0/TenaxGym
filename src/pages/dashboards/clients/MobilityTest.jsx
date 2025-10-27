@@ -24,7 +24,6 @@ export default function MobilityTest() {
   const [selectedExercise, setSelectedExercise] = useState("");
   const [marca, setMarca] = useState("");
   const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
-  const [imagen, setImagen] = useState("");
   const [error, setError] = useState(null);
 
   const ejerciciosMovilidad = {
@@ -94,7 +93,6 @@ export default function MobilityTest() {
         ejercicio: selectedExercise,
         marca: parseFloat(marca),
         fecha,
-        imagen: imagen || null,
       };
 
       const { data, error } = await supabase
@@ -142,7 +140,6 @@ export default function MobilityTest() {
     setSelectedExercise("");
     setMarca("");
     setFecha(new Date().toISOString().split("T")[0]);
-    setImagen("");
   };
 
   const getBaseName = (ejercicio) =>
@@ -516,19 +513,6 @@ export default function MobilityTest() {
                       value={fecha}
                       onChange={(e) => setFecha(e.target.value)}
                       className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      URL de Imagen (Opcional)
-                    </label>
-                    <input
-                      type="url"
-                      value={imagen}
-                      onChange={(e) => setImagen(e.target.value)}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white"
-                      placeholder="https://ejemplo.com/imagen.jpg"
                     />
                   </div>
 

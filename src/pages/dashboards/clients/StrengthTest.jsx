@@ -29,7 +29,6 @@ export default function StrengthTest() {
   const [selectedExercise, setSelectedExercise] = useState("");
   const [marca, setMarca] = useState("");
   const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
-  const [imagen, setImagen] = useState("");
 
   const ejerciciosFuerza = [
     "Sentadilla",
@@ -85,7 +84,6 @@ export default function StrengthTest() {
           ejercicio: selectedExercise,
           marca: parseFloat(marca),
           fecha: fecha,
-          imagen: imagen || null,
         },
       ]);
 
@@ -124,7 +122,6 @@ export default function StrengthTest() {
     setSelectedExercise("");
     setMarca("");
     setFecha(new Date().toISOString().split("T")[0]);
-    setImagen("");
   };
 
   const groupByExercise = () => {
@@ -270,13 +267,6 @@ export default function StrengthTest() {
                         <div className="text-2xl font-bold text-white">
                           {resultado.marca} kg
                         </div>
-                        {resultado.imagen && (
-                          <img
-                            src={resultado.imagen}
-                            alt="Evidencia"
-                            className="mt-2 w-full h-32 object-cover rounded-lg"
-                          />
-                        )}
                       </div>
                       <button
                         onClick={() =>
@@ -361,19 +351,6 @@ export default function StrengthTest() {
                       onChange={(e) => setFecha(e.target.value)}
                       className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white"
                       required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      URL de Imagen (Opcional)
-                    </label>
-                    <input
-                      type="url"
-                      value={imagen}
-                      onChange={(e) => setImagen(e.target.value)}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white"
-                      placeholder="https://ejemplo.com/imagen.jpg"
                     />
                   </div>
 

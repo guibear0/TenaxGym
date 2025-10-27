@@ -1,5 +1,3 @@
-//eslint-disable-next-line
-import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Activity, Ruler, BookOpenCheck } from "lucide-react";
@@ -12,7 +10,6 @@ export default function ClientDashboard() {
   const [greeting, setGreeting] = useState("");
   const [quote, setQuote] = useState("");
 
-  // Sample quotes (could be fetched from an API)
   const quotes = [
     "El único entrenamiento malo es el que no se realiza.",
     "Esfuérzate porque nadie más lo hará por ti.",
@@ -21,19 +18,14 @@ export default function ClientDashboard() {
   ];
 
   useEffect(() => {
-    // Set user name
     const user = JSON.parse(localStorage.getItem("userProfile"));
-    if (user && user.name) {
-      setUserName(user.name);
-    }
+    if (user && user.name) setUserName(user.name);
 
-    // Set dynamic greeting based on time of day
     const hour = new Date().getHours();
     if (hour < 12) setGreeting("Buenos Días");
     else if (hour < 21) setGreeting("Buenas Tardes");
     else setGreeting("Buenas Noches");
 
-    // Set random quote
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     setQuote(randomQuote);
     //eslint-disable-next-line
@@ -45,24 +37,24 @@ export default function ClientDashboard() {
       icon: <User size={48} />,
       description: "Visualiza y edita la información de tu perfil",
       onClick: () => navigate("/profile"),
-      bgColor: "bg-blue-600",
-      hoverColor: "hover:bg-blue-700",
+      bgColor: "#1e3a8a", // azul oscuro armonizado
+      hoverColor: "#3b82f6", // azul brillante
     },
     {
       title: "Ejercicios",
       icon: <Activity size={48} />,
       description: "Accede a tus entrenamientos diarios",
       onClick: () => navigate("/day-selector"),
-      bgColor: "bg-green-600",
-      hoverColor: "hover:bg-green-700",
+      bgColor: "#065f46", // verde azulado oscuro
+      hoverColor: "#10b981", // verde brillante
     },
     {
       title: "Medidas Corporales",
       icon: <Ruler size={48} />,
       description: "Registra y monitorea tus medidas corporales",
       onClick: () => navigate("/measures"),
-      bgColor: "bg-purple-600",
-      hoverColor: "hover:bg-purple-700",
+      bgColor: "#5b21b6", // morado oscuro
+      hoverColor: "#9333ea", // morado brillante
     },
     {
       title: "Tests",
@@ -70,8 +62,8 @@ export default function ClientDashboard() {
       description:
         "Haz los tests de fuerza y movilidad y registra tus progresos",
       onClick: () => navigate("/tests"),
-      bgColor: "bg-orange-600",
-      hoverColor: "hover:bg-orange-700",
+      bgColor: "#c2410c", // naranja oscuro suave
+      hoverColor: "#fb923c", // naranja brillante
     },
   ];
 
@@ -80,7 +72,7 @@ export default function ClientDashboard() {
       {/* Navbar */}
       <Navbar />
 
-      {/* Header Section */}
+      {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
           {greeting}
@@ -89,7 +81,7 @@ export default function ClientDashboard() {
         <p className="mt-4 text-lg text-gray-300 italic">"{quote}"</p>
       </div>
 
-      {/* Cards Section */}
+      {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6 w-full max-w-6xl px-4">
         {cards.map((card) => (
           <CardBox
