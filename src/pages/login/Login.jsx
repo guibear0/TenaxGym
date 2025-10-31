@@ -1,6 +1,6 @@
 //eslint-disable-next-line
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, Link } from "react-router-dom";
 import bcrypt from "bcryptjs";
@@ -9,6 +9,15 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
+
+  // Si ya está logueado, saltar login automáticamente
+  useEffect(() => {
+    const savedUser = localStorage.getItem("userProfile");
+    if (savedUser) {
+      const u = JSON.parse(savedUser);
+      navigate(u.is_trainer ? "/trainer-dashboard" : "/client-dashboard");
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -48,7 +57,10 @@ export default function Login() {
         transition={{ duration: 0.5 }}
         className="flex flex-col items-center justify-center w-full max-w-md"
       >
-        <Link to="/" className="flex items-center mb-6 text-2xl font-semibold text-gray-100 hover:text-blue-400 transition-all duration-200">
+        <Link
+          to="/"
+          className="flex items-center mb-6 text-2xl font-semibold text-gray-100 hover:text-blue-400 transition-all duration-200"
+        >
           TENAX GYM
         </Link>
 
@@ -57,7 +69,9 @@ export default function Login() {
             Inicia sesión en tu cuenta
           </h1>
 
-          {errorMsg && <p className="text-red-400 text-sm font-medium">{errorMsg}</p>}
+          {errorMsg && (
+            <p className="text-red-400 text-sm font-medium">{errorMsg}</p>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
@@ -91,7 +105,10 @@ export default function Login() {
             </div>
 
             <div className="flex items-center justify-between">
-              <Link to="/forgot-password" className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-all duration-200">
+              <Link
+                to="/forgot-password"
+                className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-all duration-200"
+              >
                 ¿Olvidaste tu contraseña?
               </Link>
             </div>
@@ -108,7 +125,10 @@ export default function Login() {
 
             <p className="text-sm font-light text-gray-100 text-center">
               ¿No tienes cuenta aún?{" "}
-              <Link to="/register" className="font-medium text-blue-400 hover:text-blue-300 transition-all duration-200">
+              <Link
+                to="/register"
+                className="font-medium text-blue-400 hover:text-blue-300 transition-all duration-200"
+              >
                 Regístrate
               </Link>
             </p>

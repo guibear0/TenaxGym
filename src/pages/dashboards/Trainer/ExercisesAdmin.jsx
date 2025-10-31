@@ -11,6 +11,7 @@ import {
   Edit2,
   MessageSquare,
   Trash,
+  GripVertical,
 } from "lucide-react";
 
 import { toast } from "react-hot-toast";
@@ -45,6 +46,8 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
+  const [draggedId, setDraggedId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
 
   const userProfile = JSON.parse(localStorage.getItem("userProfile"));
 
@@ -147,7 +150,8 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
           .select("*, catalogo_ejercicios(nombre, tipo, imagen)")
           .eq("client_id", clientId)
           .eq("numero_dia", day)
-          .order("created_at", { ascending: true });
+          .order("orden", { ascending: true }); // ✅ Ordenar por campo orden
+
         if (error) throw error;
 
         const grouped = data.reduce((acc, ex) => {
@@ -221,7 +225,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
       .select("*, catalogo_ejercicios(nombre, tipo, imagen)")
       .eq("client_id", clientId)
       .eq("numero_dia", day)
-      .order("created_at", { ascending: true });
+      .order("orden", { ascending: true }); // ✅ Ordenar por campo orden
 
     const grouped = (data || []).reduce((acc, ex) => {
       const tipo = ex.catalogo_ejercicios?.tipo || "Otros";
@@ -245,11 +249,25 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
     }));
   };
 
+  // === Añadir ejercicio individual desde catálogo ===
   const addExercise = async (catalogId) => {
     try {
       // Buscar el nombre del ejercicio en el catálogo
       const exercise = catalog.find((ex) => ex.id === catalogId);
       const exerciseName = exercise?.nombre || "Ejercicio";
+
+      // Obtener el último orden para este día
+      const { data: existingExercises } = await supabase
+        .from("ejercicios_cliente")
+        .select("orden")
+        .eq("client_id", clientId)
+        .eq("numero_dia", day)
+        .order("orden", { ascending: false })
+        .limit(1);
+
+      const nextOrder = existingExercises?.[0]?.orden
+        ? existingExercises[0].orden + 1
+        : 1;
 
       const { error } = await supabase.from("ejercicios_cliente").insert([
         {
@@ -260,8 +278,10 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
           duracion: formValues.duracion,
           descanso: formValues.descanso,
           descripcion: formValues.descripcion,
+          orden: nextOrder, // ✅ Asignar orden
         },
       ]);
+
       if (error) throw error;
       setShowAddForm(null);
       setShowCatalog(false);
@@ -345,6 +365,56 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
     }
   };
 
+  // === Funciones de drag and drop para reordenar ===
+  const handleDragStart = (e, exerciseId) => {
+    setDraggedId(exerciseId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e, targetId) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverId(targetId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverId(null);
+  };
+
+  const handleDrop = async (e, targetId) => {
+    e.preventDefault();
+    setDragOverId(null);
+
+    if (draggedId === targetId) return;
+
+    // Obtener todos los ejercicios del día actual ordenados
+    const allExercises = Object.values(exercises).flat();
+    const draggedIndex = allExercises.findIndex((ex) => ex.id === draggedId);
+    const targetIndex = allExercises.findIndex((ex) => ex.id === targetId);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const newExercises = [...allExercises];
+    const [draggedExercise] = newExercises.splice(draggedIndex, 1);
+    newExercises.splice(targetIndex, 0, draggedExercise);
+
+    try {
+      // Actualizar el orden en la base de datos
+      for (let i = 0; i < newExercises.length; i++) {
+        await supabase
+          .from("ejercicios_cliente")
+          .update({ orden: i + 1 })
+          .eq("id", newExercises[i].id);
+      }
+      toast.success("Orden actualizado");
+      await refreshExercises();
+    } catch (err) {
+      toast.error("Error actualizando orden: " + err.message);
+    }
+
+    setDraggedId(null);
+  };
+
   // === Funciones sesiones ===
   const fetchTrainerSessions = async () => {
     setShowSessions(true);
@@ -365,6 +435,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
     }
   };
 
+  // === Añadir sesión completa al cliente ===
   const addSessionToClient = async (session) => {
     try {
       const { data: sesionExercises, error } = await supabase
@@ -372,9 +443,23 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
         .select("*")
         .eq("sesion_id", session.id)
         .order("orden", { ascending: true });
+
       if (error) throw error;
 
+      // Obtener el último orden actual del cliente para este día
+      const { data: existingExercises } = await supabase
+        .from("ejercicios_cliente")
+        .select("orden")
+        .eq("client_id", clientId)
+        .eq("numero_dia", day)
+        .order("orden", { ascending: false })
+        .limit(1);
+
+      let currentOrder = existingExercises?.[0]?.orden || 0;
+
+      // Insertar todos los ejercicios de la sesión manteniendo su orden relativo
       for (const ex of sesionExercises) {
+        currentOrder++;
         await supabase.from("ejercicios_cliente").insert([
           {
             client_id: clientId,
@@ -384,6 +469,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
             duracion: ex.duracion,
             descanso: ex.descanso,
             descripcion: ex.descripcion,
+            orden: currentOrder, // ✅ Mantener orden de la sesión
           },
         ]);
       }
@@ -395,7 +481,6 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
       toast.error("Error al añadir sesión: " + err.message);
     }
   };
-
   // === RETURN ===
   return (
     <div className="min-h-screen p-4">

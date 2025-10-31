@@ -1,12 +1,11 @@
 //eslint-disable-next-line
 import { motion } from "framer-motion";
 import { LogOut } from "lucide-react";
-import { supabase } from "../../lib/supabase";
 
 export default function Navbar() {
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/";
+  const handleLogout = () => {
+    localStorage.removeItem("userProfile");
+    window.location.href = "/login";
   };
 
   return (

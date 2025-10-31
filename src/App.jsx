@@ -19,63 +19,131 @@ import StrengthTest from "./pages/dashboards/clients/StrengthTest";
 import MobilityTest from "./pages/dashboards/clients/MobilityTest";
 import Sessions from "./pages/dashboards/Trainer/Sessions";
 
+import PrivateRoute from "./components/PrivateRoute";
+
 function App() {
   return (
     <BrowserRouter>
-      {/* Toaster global con estilos simplificados */}
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: "rgba(31, 41, 55, 0.9)", // Gray-800 con transparencia
-            backdropFilter: "blur(12px)",
-            color: "#fff",
-            border: "1px solid rgba(75, 85, 99, 0.4)", // Gray-600 border
-            borderRadius: "12px",
-            padding: "12px 16px",
-            fontSize: "15px",
-          },
-          success: {
-            iconTheme: {
-              primary: "#22c55e", // verde success
-              secondary: "#ffffff",
-            },
-            style: {
-              background: "rgba(22, 101, 52, 0.9)", // verde oscuro
-              border: "1px solid rgba(34, 197, 94, 0.5)",
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: "#ef4444", // rojo error
-              secondary: "#ffffff",
-            },
-            style: {
-              background: "rgba(127, 29, 29, 0.9)",
-              border: "1px solid rgba(239, 68, 68, 0.4)",
-            },
-          },
-        }}
-      />
+      <Toaster /* ... tus configs ... */ />
+
       <Routes>
+        {/* Rutas públicas */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/client-dashboard" element={<ClientDashboard />} />
-        <Route path="/trainer-dashboard" element={<TrainerDashboard />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/clients" element={<Clients />} />
-        <Route path="/day-selector" element={<DaySelector />} />
-        <Route path="/exercises-admin" element={<ExercisesAdmin />} />
-        <Route path="/catalog" element={<Catalog />} />
-        <Route path="/measures" element={<Measures />} />
-        <Route path="/tests" element={<Tests />} />
-        <Route path="/tests/strength" element={<StrengthTest />} />
-        <Route path="/tests/mobility" element={<MobilityTest />} />
-        <Route path="/sessions" element={<Sessions />} />
+
+        {/* ✅ RUTAS PRIVADAS DEL CLIENTE */}
+        <Route
+          path="/client-dashboard"
+          element={
+            <PrivateRoute role="client">
+              <ClientDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/day-selector"
+          element={
+            <PrivateRoute role="client">
+              <DaySelector />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/measures"
+          element={
+            <PrivateRoute role="client">
+              <Measures />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/tests"
+          element={
+            <PrivateRoute role="client">
+              <Tests />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/tests/strength"
+          element={
+            <PrivateRoute role="client">
+              <StrengthTest />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/tests/mobility"
+          element={
+            <PrivateRoute role="client">
+              <MobilityTest />
+            </PrivateRoute>
+          }
+        />
+
+        {/* ✅ RUTAS PRIVADAS DEL ENTRENADOR */}
+        <Route
+          path="/trainer-dashboard"
+          element={
+            <PrivateRoute role="trainer">
+              <TrainerDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/clients"
+          element={
+            <PrivateRoute role="trainer">
+              <Clients />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/exercises-admin"
+          element={
+            <PrivateRoute role="trainer">
+              <ExercisesAdmin />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/catalog"
+          element={
+            <PrivateRoute role="trainer">
+              <Catalog />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/sessions"
+          element={
+            <PrivateRoute role="trainer">
+              <Sessions />
+            </PrivateRoute>
+          }
+        />
+
+        {/* ✅ Perfil (cualquiera que esté logueado puede verlo) */}
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <Profile />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

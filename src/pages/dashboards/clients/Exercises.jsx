@@ -37,7 +37,7 @@ export default function ClientExercises({ day }) {
           .select(`*, catalogo_ejercicios(nombre, tipo, imagen)`)
           .eq("client_id", clientId)
           .eq("numero_dia", day)
-          .order("catalogo_id", { ascending: true });
+          .order("orden", { ascending: true });
 
         if (error) throw error;
         setExercises(data || []);
