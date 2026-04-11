@@ -3,12 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import ClientExercisesAdmin from "../Trainer/ExercisesAdmin";
+import ClientMeasures from "../Trainer/ClientMeasures";
 import BackButton from "../../../components/ui/BackButton";
 import { toast } from "react-hot-toast";
+import { Dumbbell, Ruler } from "lucide-react";
 
 export default function Clients() {
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [clientView, setClientView] = useState("exercises"); // "exercises" | "measures"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showSkeleton, setShowSkeleton] = useState(true);
@@ -57,6 +60,16 @@ export default function Clients() {
     } catch (err) {
       toast.error("Error al asignar cliente: " + err.message);
     }
+  };
+
+  const handleSelectClient = (client, view = "exercises") => {
+    setSelectedClient(client);
+    setClientView(view);
+  };
+
+  const handleBackToClients = () => {
+    setSelectedClient(null);
+    setClientView("exercises");
   };
 
   const assignedClients = clients.filter((c) => c.trainer_id === trainerId);
@@ -116,28 +129,56 @@ export default function Clients() {
                         initial="hidden"
                         animate="visible"
                         variants={listItemVariants}
-                        className="relative border border-green-500 bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl cursor-pointer p-6 flex flex-col justify-between"
-                        onClick={() => setSelectedClient(client)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ")
-                            setSelectedClient(client);
-                        }}
-                        aria-label={`View details for ${client.profiles.name}`}
+                        className="relative border border-green-500 bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl p-6 flex flex-col justify-between"
                       >
                         <div className="absolute inset-0 bg-gradient-to-br from-green-900/30 to-transparent opacity-50 rounded-2xl"></div>
-                        <div className="relative z-10">
+                        <div
+                          className="relative z-10 cursor-pointer"
+                          onClick={() => handleSelectClient(client, "exercises")}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ")
+                              handleSelectClient(client, "exercises");
+                          }}
+                          aria-label={`View details for ${client.profiles.name}`}
+                        >
                           <p className="font-semibold text-lg text-gray-100">
                             {client.profiles.name}
                           </p>
                           <p className="text-sm text-gray-400">
                             {client.profiles.email}
                           </p>
+                          <span className="text-green-400 font-medium mt-3 block">
+                            Asignado
+                          </span>
                         </div>
-                        <span className="relative z-10 text-green-400 font-medium mt-3">
-                          Asignado
-                        </span>
+
+                        {/* Botones de acción */}
+                        <div className="relative z-10 flex gap-2 mt-4">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectClient(client, "exercises");
+                            }}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-200 text-sm font-medium cursor-pointer"
+                            title="Ver ejercicios"
+                          >
+                            <Dumbbell className="w-4 h-4" />
+                            Ejercicios
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectClient(client, "measures");
+                            }}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-all duration-200 text-sm font-medium cursor-pointer"
+                            title="Ver medidas corporales"
+                          >
+                            <Ruler className="w-4 h-4" />
+                            Medidas
+                          </button>
+                        </div>
                       </motion.div>
                     ))
                   )}
@@ -185,10 +226,57 @@ export default function Clients() {
               )}
             </motion.div>
           ) : (
-            <ClientExercisesAdmin
-              clientId={selectedClient.id_cliente}
-              onBack={() => setSelectedClient(null)}
-            />
+            <motion.div
+              key="client-detail"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {/* Tabs para cambiar entre Ejercicios y Medidas */}
+              <div className="flex justify-center mb-6">
+                <div className="inline-flex bg-gray-800/80 backdrop-blur-sm rounded-xl p-1 border border-gray-700/50">
+                  <button
+                    onClick={() => setClientView("exercises")}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+                      clientView === "exercises"
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : "text-gray-400 hover:text-white hover:bg-gray-700/50"
+                    }`}
+                  >
+                    <Dumbbell className="w-4 h-4" />
+                    Ejercicios
+                  </button>
+                  <button
+                    onClick={() => setClientView("measures")}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+                      clientView === "measures"
+                        ? "bg-purple-600 text-white shadow-lg"
+                        : "text-gray-400 hover:text-white hover:bg-gray-700/50"
+                    }`}
+                  >
+                    <Ruler className="w-4 h-4" />
+                    Medidas
+                  </button>
+                </div>
+              </div>
+
+              {/* Vista según tab seleccionado */}
+              <AnimatePresence mode="wait">
+                {clientView === "exercises" ? (
+                  <ClientExercisesAdmin
+                    key="exercises-view"
+                    clientId={selectedClient.id_cliente}
+                    onBack={handleBackToClients}
+                  />
+                ) : (
+                  <ClientMeasures
+                    key="measures-view"
+                    clientId={selectedClient.id_cliente}
+                    onBack={handleBackToClients}
+                  />
+                )}
+              </AnimatePresence>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
