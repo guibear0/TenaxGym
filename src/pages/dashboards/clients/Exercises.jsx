@@ -196,25 +196,35 @@ export default function ClientExercises({ day }) {
                           damping: 20,
                         }}
                         whileHover={{ scale: 1.03, y: -3 }}
-                        className="relative bg-gray-800/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-gray-700/50 p-3 md:p-5 hover:border-blue-500 transition-all duration-200"
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          if (ex.catalogo_ejercicios?.imagen) {
+                            setSelectedImage(ex.catalogo_ejercicios.imagen);
+                          }
+                        }}
+                        className={`relative bg-gray-800/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-gray-700/50 p-3 md:p-5 hover:border-blue-500 transition-all duration-200 ${
+                          ex.catalogo_ejercicios?.imagen ? "cursor-pointer" : ""
+                        }`}
                       >
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-transparent opacity-50 rounded-xl md:rounded-2xl"></div>
                         <div className="relative z-10 flex gap-3 items-start">
-                          {/* Thumbnail de imagen - visible en móvil como imagen inline */}
+                          {/* Thumbnail de imagen con indicador visual de click */}
                           {ex.catalogo_ejercicios?.imagen && (
-                            <button
-                              onClick={() =>
-                                setSelectedImage(ex.catalogo_ejercicios.imagen)
-                              }
-                              className="flex-shrink-0 rounded-lg overflow-hidden border border-gray-600/50 hover:border-blue-500 transition-colors"
-                              aria-label={`Ver imagen de ${ex.catalogo_ejercicios?.nombre}`}
-                            >
+                            <div className="relative flex-shrink-0 rounded-lg overflow-hidden border-2 border-blue-500/40 hover:border-blue-400 transition-all duration-200 shadow-[0_0_8px_rgba(59,130,246,0.3)] hover:shadow-[0_0_14px_rgba(59,130,246,0.5)] group/img">
                               <img
                                 src={ex.catalogo_ejercicios.imagen}
                                 alt={ex.catalogo_ejercicios.nombre}
                                 className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-cover"
                               />
-                            </button>
+                              {/* Overlay con icono de expandir */}
+                              <div className="absolute inset-0 bg-blue-900/50 opacity-0 group-hover/img:opacity-100 md:transition-opacity md:duration-200 flex items-center justify-center">
+                                <ImageUpscale className="w-5 h-5 md:w-6 md:h-6 text-white drop-shadow-lg" />
+                              </div>
+                              {/* Indicador "tap" permanente en móvil */}
+                              <div className="absolute bottom-0.5 right-0.5 md:hidden bg-blue-600/80 rounded-full p-0.5">
+                                <ImageUpscale className="w-2.5 h-2.5 text-white" />
+                              </div>
+                            </div>
                           )}
                           {/* Info del ejercicio */}
                           <div className="flex-1 min-w-0">
