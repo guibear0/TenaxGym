@@ -550,20 +550,22 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
       )}
 
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-6">
-        {/* Sidebar */}
-        <aside className="md:w-48 w-full self-start space-y-4 bg-gray-800/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/50">
-          <h3 className="font-semibold text-lg text-gray-100">Guía</h3>
-          <div className="flex items-center gap-2 text-sm">
-            <Repeat className="w-4 h-4 text-gray-300" /> Repeticiones
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="w-4 h-4 text-gray-300" /> Duración
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <RotateCcw className="w-4 h-4 text-gray-300" /> Descanso
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <StickyNote className="w-4 h-4 text-gray-300" /> Notas
+        {/* Sidebar - horizontal on mobile, vertical on desktop */}
+        <aside className="md:w-48 w-full self-start bg-gray-800/80 backdrop-blur-sm rounded-2xl p-3 md:p-4 border border-gray-700/50">
+          <h3 className="font-semibold text-base md:text-lg text-gray-100 mb-2 md:mb-4">Guía</h3>
+          <div className="flex flex-wrap md:flex-col gap-3 md:gap-4">
+            <div className="flex items-center gap-1.5 text-xs md:text-sm">
+              <Repeat className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-300" /> Repeticiones
+            </div>
+            <div className="flex items-center gap-1.5 text-xs md:text-sm">
+              <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-300" /> Duración
+            </div>
+            <div className="flex items-center gap-1.5 text-xs md:text-sm">
+              <RotateCcw className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-300" /> Descanso
+            </div>
+            <div className="flex items-center gap-1.5 text-xs md:text-sm">
+              <StickyNote className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-300" /> Notas
+            </div>
           </div>
         </aside>
 
@@ -714,25 +716,25 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
                       </div>
 
                       {/* Lista de ejercicios */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                         {exGroup.map((ex) => (
                           <motion.div
                             key={ex.id}
                             whileHover={{ scale: 1.02 }}
-                            className="relative border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-4 flex flex-col gap-2"
+                            className="relative border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-lg p-3 md:p-4"
                           >
-                            {ex.catalogo_ejercicios?.imagen && (
-                              <img
-                                src={ex.catalogo_ejercicios.imagen}
-                                alt={ex.catalogo_ejercicios.nombre}
-                                className="w-full h-32 md:h-40 object-cover rounded-lg mb-2"
-                              />
-                            )}
-
                             {editing === ex.id ? (
+                              /* Modo edición - layout vertical */
                               <div className="space-y-2">
+                                {ex.catalogo_ejercicios?.imagen && (
+                                  <img
+                                    src={ex.catalogo_ejercicios.imagen}
+                                    alt={ex.catalogo_ejercicios.nombre}
+                                    className="w-full h-24 md:h-40 object-cover rounded-lg mb-2"
+                                  />
+                                )}
                                 <input
-                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2"
+                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2 text-sm"
                                   placeholder="Repeticiones"
                                   value={editValues.n_reps}
                                   onChange={(e) =>
@@ -743,7 +745,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
                                   }
                                 />
                                 <input
-                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2"
+                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2 text-sm"
                                   placeholder="Duración"
                                   value={editValues.duracion}
                                   onChange={(e) =>
@@ -754,7 +756,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
                                   }
                                 />
                                 <input
-                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2"
+                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2 text-sm"
                                   placeholder="Descanso"
                                   value={editValues.descanso}
                                   onChange={(e) =>
@@ -765,7 +767,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
                                   }
                                 />
                                 <textarea
-                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2"
+                                  className="w-full bg-gray-800 border border-gray-700 rounded-lg text-white p-2 text-sm"
                                   rows={2}
                                   placeholder="Descripción"
                                   value={editValues.descripcion}
@@ -779,68 +781,88 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
                                 <div className="flex gap-2 justify-end">
                                   <button
                                     onClick={() => setEditing(null)}
-                                    className="px-3 py-1 bg-gray-600 rounded-lg hover:bg-gray-700 text-white"
+                                    className="px-3 py-1 bg-gray-600 rounded-lg hover:bg-gray-700 text-white text-sm"
                                   >
                                     Cancelar
                                   </button>
                                   <button
                                     onClick={() => saveEdit(ex.id)}
-                                    className="px-3 py-1 bg-green-600 rounded-lg hover:bg-green-700 text-white"
+                                    className="px-3 py-1 bg-green-600 rounded-lg hover:bg-green-700 text-white text-sm"
                                   >
                                     Guardar
                                   </button>
                                 </div>
                               </div>
                             ) : (
-                              <>
-                                <div className="flex justify-between items-center">
-                                  <p className="font-semibold text-gray-100">
-                                    {ex.catalogo_ejercicios?.nombre}
-                                  </p>
-                                  <div className="flex gap-2">
-                                    <Edit2
-                                      className="w-5 h-5 text-blue-400 hover:text-blue-300 cursor-pointer"
-                                      onClick={() => startEdit(ex)}
+                              /* Modo visualización - layout horizontal en móvil */
+                              <div className="flex gap-3">
+                                {/* Imagen thumbnail */}
+                                {ex.catalogo_ejercicios?.imagen && (
+                                  <img
+                                    src={ex.catalogo_ejercicios.imagen}
+                                    alt={ex.catalogo_ejercicios.nombre}
+                                    className="w-20 h-20 sm:w-24 sm:h-24 md:w-full md:h-36 object-cover rounded-lg flex-shrink-0 md:hidden"
+                                  />
+                                )}
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                  {/* Imagen visible solo en desktop, arriba del contenido */}
+                                  {ex.catalogo_ejercicios?.imagen && (
+                                    <img
+                                      src={ex.catalogo_ejercicios.imagen}
+                                      alt={ex.catalogo_ejercicios.nombre}
+                                      className="hidden md:block w-full h-36 object-cover rounded-lg mb-2"
                                     />
-                                    <Trash2
-                                      className="w-5 h-5 text-red-400 hover:text-red-300 cursor-pointer"
-                                      onClick={() =>
-                                        deleteExercise(
-                                          ex.id,
-                                          ex.catalogo_ejercicios?.nombre
-                                        )
-                                      }
-                                    />
+                                  )}
+                                  <div className="flex justify-between items-start">
+                                    <p className="font-semibold text-gray-100 text-sm md:text-base truncate pr-2">
+                                      {ex.catalogo_ejercicios?.nombre}
+                                    </p>
+                                    <div className="flex gap-1.5 flex-shrink-0">
+                                      <Edit2
+                                        className="w-4 h-4 md:w-5 md:h-5 text-blue-400 hover:text-blue-300 cursor-pointer"
+                                        onClick={() => startEdit(ex)}
+                                      />
+                                      <Trash2
+                                        className="w-4 h-4 md:w-5 md:h-5 text-red-400 hover:text-red-300 cursor-pointer"
+                                        onClick={() =>
+                                          deleteExercise(
+                                            ex.id,
+                                            ex.catalogo_ejercicios?.nombre
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs md:text-sm mt-1">
+                                    {ex.n_reps && (
+                                      <div className="flex items-center gap-1">
+                                        <Repeat className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-300" />
+                                        <span>{ex.n_reps}</span>
+                                      </div>
+                                    )}
+                                    {ex.duracion && (
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-300" />
+                                        <span>{ex.duracion}</span>
+                                      </div>
+                                    )}
+                                    {ex.descanso && (
+                                      <div className="flex items-center gap-1">
+                                        <RotateCcw className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-300" />
+                                        <span>{ex.descanso}</span>
+                                      </div>
+                                    )}
+                                    {ex.descripcion && (
+                                      <div className="flex items-center gap-1 w-full mt-0.5">
+                                        <StickyNote className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-300 flex-shrink-0" />
+                                        <span className="truncate">{ex.descripcion}</span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
-
-                                <div className="space-y-1 text-sm mt-1">
-                                  {ex.n_reps && (
-                                    <div className="flex items-center gap-2">
-                                      <Repeat className="w-4 h-4 text-gray-300" />
-                                      <span>{ex.n_reps}</span>
-                                    </div>
-                                  )}
-                                  {ex.duracion && (
-                                    <div className="flex items-center gap-2">
-                                      <Clock className="w-4 h-4 text-gray-300" />
-                                      <span>{ex.duracion}</span>
-                                    </div>
-                                  )}
-                                  {ex.descanso && (
-                                    <div className="flex items-center gap-2">
-                                      <RotateCcw className="w-4 h-4 text-gray-300" />
-                                      <span>{ex.descanso}</span>
-                                    </div>
-                                  )}
-                                  {ex.descripcion && (
-                                    <div className="flex items-center gap-2">
-                                      <StickyNote className="w-4 h-4 text-gray-300" />
-                                      <span>{ex.descripcion}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </>
+                              </div>
                             )}
                           </motion.div>
                         ))}
@@ -887,21 +909,21 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
 
                 {/* Catálogo */}
                 {showCatalog && (
-                  <div className="bg-gray-900 p-4 rounded-xl border border-gray-700/50 mt-4">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-100">
+                  <div className="bg-gray-900 p-3 md:p-4 rounded-xl border border-gray-700/50 mt-4">
+                    <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-100">
                       Selecciona un ejercicio del catálogo
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                       {catalog.map((cat) => (
                         <motion.div
                           key={cat.id}
-                          className="border border-gray-700 rounded-lg p-4 bg-gray-800"
+                          className="border border-gray-700 rounded-lg p-3 md:p-4 bg-gray-800"
                         >
                           {cat.imagen && (
                             <img
                               src={cat.imagen}
                               alt={cat.nombre}
-                              className="w-full h-32 object-cover rounded-lg mb-3"
+                              className="w-full h-20 md:h-32 object-cover rounded-lg mb-2 md:mb-3"
                             />
                           )}
                           <h4 className="font-semibold text-gray-100 mb-2">
