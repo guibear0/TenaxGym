@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../../../lib/supabase";
 import {
   Clock,
@@ -255,46 +256,51 @@ export default function ClientExercises({ day }) {
               </div>
             );
           })}
-
-          <AnimatePresence>
-            {selectedImage && (
-              <motion.div
-                key="modal"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-                onClick={() => setSelectedImage(null)}
-                role="dialog"
-                aria-label="Exercise image modal"
-                aria-modal="true"
-              >
-                <motion.div
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0.8 }}
-                  className="relative max-h-[90%] max-w-[90%] md:max-h-[80%] md:max-w-[80%] rounded-2xl shadow-2xl border border-gray-700/50"
-                >
-                  <motion.button
-                    onClick={() => setSelectedImage(null)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="absolute top-2 right-2 md:top-4 md:right-4 bg-gray-800/80 backdrop-blur-sm rounded-full p-1.5 md:p-2 text-gray-300 hover:text-blue-400 border border-gray-700/50 hover:border-blue-500 transition-all duration-200"
-                    aria-label="Close image modal"
-                  >
-                    <X className="w-4 h-4 md:w-5 md:h-5" />
-                  </motion.button>
-                  <img
-                    src={selectedImage}
-                    alt="Exercise"
-                    className="max-h-[85vh] max-w-[85vw] md:max-h-[80vh] md:max-w-[80vw] rounded-2xl"
-                  />
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
       </div>
+
+      {/* Modal de imagen - renderizado con Portal para evitar problemas con transforms de framer-motion */}
+      {createPortal(
+        <AnimatePresence>
+          {selectedImage && (
+            <motion.div
+              key="modal"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+              onClick={() => setSelectedImage(null)}
+              role="dialog"
+              aria-label="Exercise image modal"
+              aria-modal="true"
+            >
+              <motion.div
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.8 }}
+                className="relative max-h-[90%] max-w-[90%] md:max-h-[80%] md:max-w-[80%] rounded-2xl shadow-2xl border border-gray-700/50"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <motion.button
+                  onClick={() => setSelectedImage(null)}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="absolute top-2 right-2 md:top-4 md:right-4 bg-gray-800/80 backdrop-blur-sm rounded-full p-1.5 md:p-2 text-gray-300 hover:text-blue-400 border border-gray-700/50 hover:border-blue-500 transition-all duration-200 z-10"
+                  aria-label="Close image modal"
+                >
+                  <X className="w-4 h-4 md:w-5 md:h-5" />
+                </motion.button>
+                <img
+                  src={selectedImage}
+                  alt="Exercise"
+                  className="max-h-[85vh] max-w-[85vw] md:max-h-[80vh] md:max-w-[80vw] rounded-2xl"
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
