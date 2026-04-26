@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { Trophy, Lock, Star, Flame, Dumbbell, Ruler, Calendar, ChevronRight } from "lucide-react";
-import BackButton from "../components/ui/BackButton";
+import BackButton from "../../../components/ui/BackButton";
 
 
 const ACHIEVEMENTS = [

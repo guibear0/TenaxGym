@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Activity, Ruler, BookOpenCheck } from "lucide-react";
+import { User, Activity, Ruler, BookOpenCheck, Flame, Trophy } from "lucide-react";
 import CardBox from "../../../components/ui/CardBox";
 import Navbar from "../../../components/ui/NavBar";
 

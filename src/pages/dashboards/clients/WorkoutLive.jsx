@@ -26,7 +26,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import BackButton from "../components/ui/BackButton";
+import BackButton from "../../../components/ui/BackButton";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const pad = (n) => String(n).padStart(2, "0");
@@ -173,8 +173,8 @@ function SetRow({ setNum, planned, actual, onChange, onComplete, completed }) {
     <motion.div
       layout
       className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl border transition-all duration-300 ${completed
-          ? "border-green-500/50 bg-green-900/20"
-          : "border-gray-700/60 bg-gray-900/40"
+        ? "border-green-500/50 bg-green-900/20"
+        : "border-gray-700/60 bg-gray-900/40"
         }`}
     >
       <span className="text-gray-500 text-sm w-6 text-center font-bold">{setNum}</span>
@@ -525,8 +525,8 @@ export default function WorkoutLive() {
               key={d}
               onClick={() => { setDay(d); }}
               className={`w-10 h-10 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${d === day
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-900/50"
-                  : "bg-gray-800/60 text-gray-400 hover:bg-gray-700/60"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-900/50"
+                : "bg-gray-800/60 text-gray-400 hover:bg-gray-700/60"
                 }`}
             >
               {d}
