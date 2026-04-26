@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 import {
   Play,
   Pause,
@@ -104,7 +104,7 @@ function RestTimer({ seconds, onSkip, onFinish, soundEnabled }) {
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
       osc.start();
       osc.stop(ctx.currentTime + 0.3);
-    } catch (_) {}
+    } catch (_) { }
   }, [soundEnabled]);
 
   useEffect(() => {
@@ -172,11 +172,10 @@ function SetRow({ setNum, planned, actual, onChange, onComplete, completed }) {
   return (
     <motion.div
       layout
-      className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl border transition-all duration-300 ${
-        completed
+      className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl border transition-all duration-300 ${completed
           ? "border-green-500/50 bg-green-900/20"
           : "border-gray-700/60 bg-gray-900/40"
-      }`}
+        }`}
     >
       <span className="text-gray-500 text-sm w-6 text-center font-bold">{setNum}</span>
 
@@ -267,9 +266,8 @@ function ExerciseCard({ ex, restTime, onSetComplete, soundEnabled }) {
 
       <motion.div
         layout
-        className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
-          allDone ? "border-green-500/60 bg-green-950/30" : "border-gray-700/50 bg-gray-800/60"
-        }`}
+        className={`rounded-2xl border overflow-hidden transition-all duration-300 ${allDone ? "border-green-500/60 bg-green-950/30" : "border-gray-700/50 bg-gray-800/60"
+          }`}
       >
         {/* Header */}
         <button
@@ -306,9 +304,8 @@ function ExerciseCard({ ex, restTime, onSetComplete, soundEnabled }) {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-              allDone ? "bg-green-900/60 text-green-300" : "bg-gray-700/60 text-gray-400"
-            }`}>
+            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${allDone ? "bg-green-900/60 text-green-300" : "bg-gray-700/60 text-gray-400"
+              }`}>
               {completedCount}/{sets.length}
             </span>
             {allDone && <CheckCircle2 className="w-5 h-5 text-green-400" />}
@@ -527,11 +524,10 @@ export default function WorkoutLive() {
             <button
               key={d}
               onClick={() => { setDay(d); }}
-              className={`w-10 h-10 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
-                d === day
+              className={`w-10 h-10 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${d === day
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-900/50"
                   : "bg-gray-800/60 text-gray-400 hover:bg-gray-700/60"
-              }`}
+                }`}
             >
               {d}
             </button>
