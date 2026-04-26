@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
+import { useWorkoutNotifications } from "../../../components/WorkoutNotifications";
 import {
   Clock,
   Repeat,
@@ -48,7 +49,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
   const [draggedId, setDraggedId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
-
+  const { push } = useWorkoutNotifications();
   const userProfile = JSON.parse(localStorage.getItem("userProfile"));
 
   // === Funciones comentarios ===
@@ -287,6 +288,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
       setShowCatalog(false);
       await refreshExercises();
       toast.success(`${exerciseName} añadido correctamente`);
+      push("routine_updated", "¡Tu entrenador ha actualizado tu rutina!", `Se añadió ${exerciseName} al Día ${day}.`);
     } catch (err) {
       toast.error("Error al añadir ejercicio: " + err.message);
     }
@@ -335,6 +337,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
 
       setExercises({});
       toast.success("Todos los ejercicios del día han sido eliminados");
+      push("routine_updated", "¡Tu entrenador ha actualizado tu rutina!", `Se eliminaron los ejercicios del Día ${day}.`);
       setDeleteAllConfirm(false);
     } catch (err) {
       toast.error("Error al eliminar ejercicios: " + err.message);
@@ -360,6 +363,7 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
       setEditing(null);
       refreshExercises();
       toast.success("Ejercicio actualizado correctamente");
+      push("routine_updated", "¡Tu entrenador ha actualizado tu rutina!", "Se modificó un ejercicio de tu rutina.");
     } else {
       toast.error("Error al actualizar");
     }
@@ -643,11 +647,10 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
                     <button
                       key={d}
                       onClick={() => setDay(d)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                        d === day
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white cursor-pointer"
-                      }`}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${d === day
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white cursor-pointer"
+                        }`}
                     >
                       Día {d}
                     </button>

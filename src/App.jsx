@@ -18,6 +18,9 @@ import Tests from "./pages/dashboards/clients/Tests";
 import StrengthTest from "./pages/dashboards/clients/StrengthTest";
 import MobilityTest from "./pages/dashboards/clients/MobilityTest";
 import Sessions from "./pages/dashboards/Trainer/Sessions";
+import WorkoutLive from "./pages/dashboards/clients/WorkoutLive";
+import Achievements from "./pages/dashboards/clients/Achievements";
+
 
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -144,6 +147,9 @@ function App() {
             </PrivateRoute>
           }
         />
+
+        <Route path="/workout-live" element={<PrivateRoute role="client"><WorkoutLive /></PrivateRoute>} />
+        <Route path="/achievements" element={<PrivateRoute role="client"><Achievements /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   );

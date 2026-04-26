@@ -1,6 +1,7 @@
 //eslint-disable-next-line
 import { motion } from "framer-motion";
 import { LogOut } from "lucide-react";
+import { WorkoutNotificationBell } from "../WorkoutNotifications";
 
 export default function Navbar() {
   const handleLogout = () => {
@@ -10,6 +11,7 @@ export default function Navbar() {
 
   return (
     <nav className="w-full max-w-6xl px-4 py-4 flex justify-end">
+      <WorkoutNotificationBell />
       <motion.button
         onClick={handleLogout}
         whileHover={{ scale: 1.05 }}

@@ -65,6 +65,25 @@ export default function ClientDashboard() {
       bgColor: "#c2410c", // naranja oscuro suave
       hoverColor: "#fb923c", // naranja brillante
     },
+
+    {
+      title: "Entrenamiento en Vivo",
+      icon: <Flame size={48} />,
+      description: "Modo entrenamiento con cronómetro y registro de series",
+      onClick: () => navigate("/workout-live"),
+      bgColor: "#7f1d1d",
+      hoverColor: "#ef4444",
+    },
+    {
+      title: "Logros",
+      icon: <Trophy size={48} />,
+      description: "Consulta tus medallas y recompensas conseguidas",
+      onClick: () => navigate("/achievements"),
+      bgColor: "#78350f",
+      hoverColor: "#f59e0b",
+    },
+
+
   ];
 
   return (
