@@ -5,8 +5,7 @@ import { supabase } from "../lib/supabase";
 import { Trophy, Lock, Star, Flame, Dumbbell, Ruler, Calendar, ChevronRight } from "lucide-react";
 import BackButton from "../components/ui/BackButton";
 
-// ── Achievement definitions ───────────────────────────────────────────────────
-// Each badge has: id, icon(emoji), title, desc, color, check(profile, stats) → bool
+
 const ACHIEVEMENTS = [
   {
     id: "first_workout",
@@ -121,11 +120,10 @@ function BadgeCard({ achievement, unlocked, newlyUnlocked }) {
         whileHover={{ scale: unlocked ? 1.04 : 1.01 }}
         whileTap={{ scale: 0.97 }}
         onClick={() => setShowDetail(true)}
-        className={`relative rounded-2xl border p-5 cursor-pointer transition-all duration-300 overflow-hidden ${
-          unlocked
+        className={`relative rounded-2xl border p-5 cursor-pointer transition-all duration-300 overflow-hidden ${unlocked
             ? `${achievement.border} bg-gray-800/80 shadow-lg ${achievement.glow}`
             : "border-gray-700/40 bg-gray-800/30 opacity-60"
-        }`}
+          }`}
       >
         {/* Glow bg for unlocked */}
         {unlocked && (
