@@ -16,6 +16,8 @@ import { toast } from "react-hot-toast";
 
 import ICCPanel from "../../../components/ICCInfo";
 import BMInfo from "../../../components/IMCPanel";
+import TMBPanel from "../../../components/TMBPanel";
+import RegistroBioimpedancia from "../../../components/RegistroBioimpedancia";
 
 const CAMPOS_INDIVIDUALES = [
   { nombre: "Pecho", campo: "pecho", color: "#4ade80" },
@@ -352,7 +354,7 @@ export default function ClientMeasures({ clientId, onBack }) {
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("id, name, email, weight, height, sexo")
+          .select("id, name, email, weight, height, sexo, birth_date")
           .eq("id", clientId)
           .single();
         if (error) throw error;
@@ -546,6 +548,25 @@ export default function ClientMeasures({ clientId, onBack }) {
                   altura={clientProfile?.height ? clientProfile.height / 100 : null}
                 />
               </div>
+            </div>
+
+            {/* TMB */}
+            <div className="mt-6">
+              <TMBPanel
+                peso={clientProfile?.weight}
+                altura={clientProfile?.height}
+                sexo={clientProfile?.sexo}
+                fechaNac={clientProfile?.birth_date}
+              />
+            </div>
+
+            {/* Bioimpedancia (solo lectura para el entrenador) */}
+            <div className="mt-6">
+              <RegistroBioimpedancia
+                userId={clientId}
+                datosHistoricos={historico}
+                readOnly={true}
+              />
             </div>
           </>
         )}

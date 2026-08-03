@@ -20,6 +20,7 @@ import MobilityTest from "./pages/dashboards/clients/MobilityTest";
 import Sessions from "./pages/dashboards/Trainer/Sessions";
 import WorkoutLive from "./pages/dashboards/clients/WorkoutLive";
 import Achievements from "./pages/dashboards/clients/Achievements";
+import ClientHistoryView from "./pages/dashboards/clients/ClientHistoryView";
 
 
 import PrivateRoute from "./components/PrivateRoute";
@@ -150,6 +151,7 @@ function App() {
 
         <Route path="/workout-live" element={<PrivateRoute role="client"><WorkoutLive /></PrivateRoute>} />
         <Route path="/achievements" element={<PrivateRoute role="client"><Achievements /></PrivateRoute>} />
+        <Route path="/workout-history" element={<PrivateRoute role="client"><ClientHistoryView /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   );

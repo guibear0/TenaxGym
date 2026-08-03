@@ -11,7 +11,8 @@ import {
   Ruler,
   Lock,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  CalendarDays,
 } from "lucide-react";
 import bcrypt from "bcryptjs";
 import PasswordInput from "../components/ui/PasswordInput";
@@ -83,6 +84,22 @@ export default function Profile() {
       }
     }
 
+    if (field === "birth_date") {
+      if (!updatedValue) {
+        return showToast("error", "Introduce una fecha de nacimiento válida.");
+      }
+      const fechaNac = new Date(updatedValue);
+      const hoy = new Date();
+      if (isNaN(fechaNac.getTime()) || fechaNac >= hoy) {
+        return showToast("error", "La fecha de nacimiento debe ser una fecha pasada.");
+      }
+      const edadMin = new Date();
+      edadMin.setFullYear(edadMin.getFullYear() - 120);
+      if (fechaNac < edadMin) {
+        return showToast("error", "Fecha de nacimiento fuera de rango.");
+      }
+    }
+
     if (field === "password") {
       if (!updatedValue || updatedValue.trim() === "") {
         return showToast("error", "La contraseña no puede estar vacía.");
@@ -120,8 +137,18 @@ export default function Profile() {
       weight: <Weight className="w-6 h-6" />,
       email: <Mail className="w-6 h-6" />,
       password: <Lock className="w-6 h-6" />,
+      birth_date: <CalendarDays className="w-6 h-6" />,
     };
     return iconMap[field] || <User className="w-6 h-6" />;
+  };
+
+  const getFieldDisplay = (field) => {
+    if (field !== "birth_date" || !profile[field]) return null;
+    return new Date(profile[field] + "T12:00:00").toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
   };
 
   if (!profile) return <p className="text-center mt-20 text-white">Cargando...</p>;
@@ -197,7 +224,9 @@ export default function Profile() {
       ) : (
         <div className="flex items-center justify-between">
           <span className="text-gray-200 ml-12">
-            {field === "password" ? "****" : profile[field] || "No establecido"}
+            {field === "password"
+              ? "****"
+              : getFieldDisplay(field) || profile[field] || "No establecido"}
           </span>
           <button
             onClick={() => startEditing(field)}
@@ -260,6 +289,7 @@ export default function Profile() {
           
           <div className="space-y-6">
             {renderField("Nombre", "name")}
+            {renderField("Fecha de nacimiento", "birth_date", "date")}
             {renderField("Altura (cm)", "height", "number")}
             {renderField("Peso (kg)", "weight", "number")}
             {renderField("Email", "email", "email")}

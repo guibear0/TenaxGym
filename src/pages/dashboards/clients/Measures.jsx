@@ -18,6 +18,8 @@ import ICCPanel from "../../../components/ICCInfo";
 import BMInfo from "../../../components/IMCPanel";
 import RegistroPerimetro from "../../../components/RegistroPerimetro";
 import RegistroPerimetroPar from "../../../components/RegistroPerimetroPar";
+import TMBPanel from "../../../components/TMBPanel";
+import RegistroBioimpedancia from "../../../components/RegistroBioimpedancia";
 
 const CAMPOS_INDIVIDUALES = [
   { nombre: "Pecho", campo: "pecho" },
@@ -270,6 +272,34 @@ export default function Mediciones() {
               <div>
                 <BMInfo peso={user.weight} altura={user.height / 100} />
               </div>
+            </div>
+
+            {/* TMB */}
+            <div className="mt-6">
+              <TMBPanel
+                peso={user.weight}
+                altura={user.height}
+                sexo={user.sexo}
+                fechaNac={user.birth_date}
+              />
+            </div>
+
+            {/* Bioimpedancia */}
+            <div className="mt-6">
+              <RegistroBioimpedancia
+                userId={user.id}
+                datosHistoricos={historico}
+                onSaved={(nuevaMedicion) => {
+                  setHistorico((prev) => {
+                    const withoutOld = prev.filter(
+                      (d) => d.fecha !== nuevaMedicion.fecha
+                    );
+                    return [...withoutOld, nuevaMedicion].sort(
+                      (a, b) => new Date(a.fecha) - new Date(b.fecha)
+                    );
+                  });
+                }}
+              />
             </div>
           </>
         )}

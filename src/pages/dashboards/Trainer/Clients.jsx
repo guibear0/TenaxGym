@@ -1,20 +1,24 @@
-//eslint-disable-next-line
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import ClientExercisesAdmin from "../Trainer/ExercisesAdmin";
 import ClientMeasures from "../Trainer/ClientMeasures";
+import ClientWorkoutHistory from "../../../components/ClientWorkoutHistory";
 import BackButton from "../../../components/ui/BackButton";
 import { toast } from "react-hot-toast";
-import { Dumbbell, Ruler } from "lucide-react";
+import { Dumbbell, Ruler, CalendarDays } from "lucide-react";
 
 export default function Clients() {
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [clientView, setClientView] = useState("exercises"); // "exercises" | "measures"
+  const [clientView, setClientView] = useState("exercises"); // "exercises" | "measures" | "history"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showSkeleton, setShowSkeleton] = useState(true);
+  // Map clientId -> training_days
+  const [trainingDaysMap, setTrainingDaysMap] = useState({});
+  // Map clientId -> completed sessions count this week
+  const [weeklyProgressMap, setWeeklyProgressMap] = useState({});
 
   const userProfile = JSON.parse(localStorage.getItem("userProfile"));
   const trainerId = userProfile?.id;
@@ -24,13 +28,46 @@ export default function Clients() {
     try {
       const { data, error } = await supabase
         .from("clientes")
-        .select("id_cliente, profiles(name, email), trainer_id")
+        .select("id_cliente, profiles(name, email), trainer_id, training_days")
         .order("created_at", { ascending: true });
       if (error) throw error;
 
-      // Simulamos retraso de 3s para los skeletons
-      setTimeout(() => {
+      setTimeout(async () => {
         setClients(data || []);
+        // Construir mapa de días
+        const map = {};
+        (data || []).forEach((c) => {
+          map[c.id_cliente] = c.training_days ?? 5;
+        });
+        setTrainingDaysMap(map);
+
+        // Traer sesiones completadas esta semana
+        const now = new Date();
+        const dayOfWeek = (now.getDay() + 6) % 7;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - dayOfWeek);
+        monday.setHours(0, 0, 0, 0);
+        const mondayStr = monday.toISOString().split("T")[0];
+
+        const { data: sessData } = await supabase
+          .from("workout_sessions")
+          .select("client_id, numero_dia")
+          .gte("fecha", mondayStr)
+          .eq("completed", true);
+
+        if (sessData) {
+          const progMap = {};
+          sessData.forEach((s) => {
+            if (!progMap[s.client_id]) progMap[s.client_id] = new Set();
+            progMap[s.client_id].add(s.numero_dia);
+          });
+          const countMap = {};
+          Object.keys(progMap).forEach((cId) => {
+            countMap[cId] = progMap[cId].size;
+          });
+          setWeeklyProgressMap(countMap);
+        }
+
         setShowSkeleton(false);
       });
     } catch (err) {
@@ -70,6 +107,22 @@ export default function Clients() {
   const handleBackToClients = () => {
     setSelectedClient(null);
     setClientView("exercises");
+  };
+
+  const updateTrainingDays = async (clientId, days) => {
+    const daysNum = parseInt(days, 10);
+    if (isNaN(daysNum) || daysNum < 1 || daysNum > 7) return;
+    try {
+      const { error } = await supabase
+        .from("clientes")
+        .update({ training_days: daysNum })
+        .eq("id_cliente", clientId);
+      if (error) throw error;
+      setTrainingDaysMap((prev) => ({ ...prev, [clientId]: daysNum }));
+      toast.success(`Días de entrenamiento actualizados a ${daysNum}`);
+    } catch (err) {
+      toast.error("Error al actualizar días: " + err.message);
+    }
   };
 
   const assignedClients = clients.filter((c) => c.trainer_id === trainerId);
@@ -154,6 +207,36 @@ export default function Clients() {
                           </span>
                         </div>
 
+                        {/* Días de entrenamiento */}
+                        <div className="relative z-10 flex items-center justify-between mt-3 bg-gray-900/60 p-2.5 rounded-xl border border-gray-700/60">
+                          <div className="flex items-center gap-2">
+                            <CalendarDays className="w-4 h-4 text-blue-300 flex-shrink-0" />
+                            <span className="text-xs text-gray-300 font-semibold">Días:</span>
+                            <select
+                              value={trainingDaysMap[client.id_cliente] ?? 5}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                updateTrainingDays(client.id_cliente, e.target.value);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="bg-gray-800 border border-gray-600 text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-blue-500 cursor-pointer"
+                              aria-label={`Training days for ${client.profiles.name}`}
+                            >
+                              {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                                <option key={d} value={d}>{d} {d === 1 ? "día" : "días"}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Resumen semanal de completados */}
+                          <div className="text-right">
+                            <span className="text-[10px] text-gray-400 block font-semibold">Esta semana</span>
+                            <span className="text-xs font-bold text-green-400">
+                              {weeklyProgressMap[client.id_cliente] || 0} / {trainingDaysMap[client.id_cliente] || 5} días ✓
+                            </span>
+                          </div>
+                        </div>
+
                         {/* Botones de acción */}
                         <div className="relative z-10 flex gap-2 mt-4">
                           <button
@@ -161,10 +244,10 @@ export default function Clients() {
                               e.stopPropagation();
                               handleSelectClient(client, "exercises");
                             }}
-                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-200 text-sm font-medium cursor-pointer"
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-200 text-xs font-medium cursor-pointer"
                             title="Ver ejercicios"
                           >
-                            <Dumbbell className="w-4 h-4" />
+                            <Dumbbell className="w-3.5 h-3.5" />
                             Ejercicios
                           </button>
                           <button
@@ -172,11 +255,22 @@ export default function Clients() {
                               e.stopPropagation();
                               handleSelectClient(client, "measures");
                             }}
-                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-all duration-200 text-sm font-medium cursor-pointer"
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-all duration-200 text-xs font-medium cursor-pointer"
                             title="Ver medidas corporales"
                           >
-                            <Ruler className="w-4 h-4" />
+                            <Ruler className="w-3.5 h-3.5" />
                             Medidas
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectClient(client, "history");
+                            }}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-all duration-200 text-xs font-medium cursor-pointer"
+                            title="Ver calendario y respuestas de sesiones"
+                          >
+                            <CalendarDays className="w-3.5 h-3.5" />
+                            Calendario
                           </button>
                         </div>
                       </motion.div>
@@ -232,12 +326,12 @@ export default function Clients() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {/* Tabs para cambiar entre Ejercicios y Medidas */}
+              {/* Tabs para cambiar entre Ejercicios, Medidas y Calendario */}
               <div className="flex justify-center mb-6">
-                <div className="inline-flex bg-gray-800/80 backdrop-blur-sm rounded-xl p-1 border border-gray-700/50">
+                <div className="inline-flex bg-gray-800/80 backdrop-blur-sm rounded-xl p-1 border border-gray-700/50 flex-wrap justify-center gap-1">
                   <button
                     onClick={() => setClientView("exercises")}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer text-sm ${
                       clientView === "exercises"
                         ? "bg-blue-600 text-white shadow-lg"
                         : "text-gray-400 hover:text-white hover:bg-gray-700/50"
@@ -248,7 +342,7 @@ export default function Clients() {
                   </button>
                   <button
                     onClick={() => setClientView("measures")}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer text-sm ${
                       clientView === "measures"
                         ? "bg-purple-600 text-white shadow-lg"
                         : "text-gray-400 hover:text-white hover:bg-gray-700/50"
@@ -256,6 +350,17 @@ export default function Clients() {
                   >
                     <Ruler className="w-4 h-4" />
                     Medidas
+                  </button>
+                  <button
+                    onClick={() => setClientView("history")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer text-sm ${
+                      clientView === "history"
+                        ? "bg-green-600 text-white shadow-lg"
+                        : "text-gray-400 hover:text-white hover:bg-gray-700/50"
+                    }`}
+                  >
+                    <CalendarDays className="w-4 h-4" />
+                    Calendario / Sesiones
                   </button>
                 </div>
               </div>
@@ -268,9 +373,15 @@ export default function Clients() {
                     clientId={selectedClient.id_cliente}
                     onBack={handleBackToClients}
                   />
-                ) : (
+                ) : clientView === "measures" ? (
                   <ClientMeasures
                     key="measures-view"
+                    clientId={selectedClient.id_cliente}
+                    onBack={handleBackToClients}
+                  />
+                ) : (
+                  <ClientWorkoutHistory
+                    key="history-view"
                     clientId={selectedClient.id_cliente}
                     onBack={handleBackToClients}
                   />

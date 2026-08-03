@@ -23,6 +23,14 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
   const [clients, setClients] = useState([]);
   const [clientId, setClientId] = useState(propClientId || "");
   const [day, setDay] = useState(1);
+  const [trainingDays, setTrainingDays] = useState(5);
+  const [dayNames, setDayNames] = useState({});
+  const [editingDayName, setEditingDayName] = useState(false);
+  const [dayNameInput, setDayNameInput] = useState("");
+  const [weekTemplates, setWeekTemplates] = useState([]);
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [templateNameInput, setTemplateNameInput] = useState("");
   const [catalog, setCatalog] = useState([]);
   const [exercises, setExercises] = useState({});
   const [loading, setLoading] = useState(false);
@@ -139,6 +147,55 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
     };
     fetchCatalog();
   }, []);
+
+  // === Traer training_days y nombres de días del cliente ===
+  useEffect(() => {
+    if (!clientId) return;
+    const fetchTrainingDays = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("clientes")
+          .select("training_days")
+          .eq("id_cliente", clientId)
+          .single();
+        if (!error && data?.training_days) {
+          setTrainingDays(data.training_days);
+          setDay((prev) => (prev > data.training_days ? 1 : prev));
+        }
+
+        // Cargar nombres de días
+        const { data: namesData } = await supabase
+          .from("training_day_config")
+          .select("day_number, day_name")
+          .eq("client_id", clientId);
+
+        if (namesData) {
+          const map = {};
+          namesData.forEach((n) => { map[n.day_number] = n.day_name; });
+          setDayNames(map);
+        }
+      } catch (_) {}
+    };
+    fetchTrainingDays();
+  }, [clientId]);
+
+  // Guardar nombre del día actual
+  const saveDayName = async () => {
+    try {
+      const { error } = await supabase
+        .from("training_day_config")
+        .upsert(
+          { client_id: clientId, day_number: day, day_name: dayNameInput.trim() },
+          { onConflict: "client_id,day_number" }
+        );
+      if (error) throw error;
+      setDayNames((prev) => ({ ...prev, [day]: dayNameInput.trim() }));
+      setEditingDayName(false);
+      toast.success("Nombre del día guardado");
+    } catch (err) {
+      toast.error("Error al guardar nombre: " + err.message);
+    }
+  };
 
   // === Traer ejercicios por cliente y día ===
   useEffect(() => {
@@ -416,7 +473,112 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
       toast.error("Error actualizando orden: " + err.message);
     }
 
-    setDraggedId(null);
+      setDraggedId(null);
+  };
+
+  // === Plantillas de Semana ===
+  const fetchWeekTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("training_templates")
+        .select("*")
+        .eq("trainer_id", userProfile?.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setWeekTemplates(data || []);
+      setShowTemplatesModal(true);
+    } catch (err) {
+      toast.error("Error al cargar plantillas: " + err.message);
+    }
+  };
+
+  const saveCurrentWeekAsTemplate = async () => {
+    if (!templateNameInput.trim()) {
+      toast.error("Introduce un nombre para la plantilla");
+      return;
+    }
+    try {
+      // 1. Crear plantilla
+      const { data: tData, error: tErr } = await supabase
+        .from("training_templates")
+        .insert([{
+          trainer_id: userProfile?.id,
+          name: templateNameInput.trim(),
+          days: trainingDays,
+        }])
+        .select()
+        .single();
+      if (tErr) throw tErr;
+
+      // 2. Traer todos los ejercicios del cliente
+      const { data: allEx } = await supabase
+        .from("ejercicios_cliente")
+        .select("*")
+        .eq("client_id", clientId);
+
+      if (allEx && allEx.length > 0) {
+        const templateExercises = allEx.map((ex) => ({
+          template_id: tData.id,
+          day_number: ex.numero_dia,
+          exercise_id: ex.catalogo_id,
+          orden: ex.orden || 0,
+          n_reps: ex.n_reps,
+          duracion: ex.duracion,
+          descanso: ex.descanso,
+          descripcion: ex.descripcion,
+        }));
+
+        await supabase.from("training_template_exercises").insert(templateExercises);
+      }
+
+      toast.success("Plantilla guardada correctamente");
+      setShowSaveTemplateModal(false);
+      setTemplateNameInput("");
+    } catch (err) {
+      toast.error("Error al guardar plantilla: " + err.message);
+    }
+  };
+
+  const applyTemplateToClient = async (template) => {
+    try {
+      // 1. Borrar ejercicios actuales del cliente
+      await supabase.from("ejercicios_cliente").delete().eq("client_id", clientId);
+
+      // 2. Traer ejercicios de la plantilla
+      const { data: tEx, error: tErr } = await supabase
+        .from("training_template_exercises")
+        .select("*")
+        .eq("template_id", template.id);
+
+      if (tErr) throw tErr;
+
+      if (tEx && tEx.length > 0) {
+        const newClientExercises = tEx.map((ex) => ({
+          client_id: clientId,
+          catalogo_id: ex.exercise_id,
+          numero_dia: ex.day_number,
+          orden: ex.orden || 0,
+          n_reps: ex.n_reps,
+          duracion: ex.duracion,
+          descanso: ex.descanso,
+          descripcion: ex.descripcion,
+        }));
+
+        await supabase.from("ejercicios_cliente").insert(newClientExercises);
+      }
+
+      // 3. Actualizar días de entrenamiento del cliente si aplica
+      if (template.days) {
+        await supabase.from("clientes").update({ training_days: template.days }).eq("id_cliente", clientId);
+        setTrainingDays(template.days);
+      }
+
+      toast.success(`Plantilla "${template.name}" aplicada correctamente`);
+      setShowTemplatesModal(false);
+      await refreshExercises();
+    } catch (err) {
+      toast.error("Error al aplicar plantilla: " + err.message);
+    }
   };
 
   // === Funciones sesiones ===
@@ -641,20 +803,81 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
 
             {clientId && (
               <>
-                {/* Días */}
-                <div className="flex flex-wrap gap-3 justify-center mb-4">
-                  {[1, 2, 3, 4, 5].map((d) => (
-                    <button
-                      key={d}
-                      onClick={() => setDay(d)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${d === day
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white cursor-pointer"
+                {/* Cabecera de Días y Nombre Personalizado */}
+                <div className="flex flex-col items-center gap-3 mb-6 bg-gray-900/60 p-4 rounded-2xl border border-gray-700/60">
+                  {/* Selector de Días dinámicos */}
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {Array.from({ length: trainingDays }, (_, i) => i + 1).map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => {
+                          setDay(d);
+                          setEditingDayName(false);
+                        }}
+                        className={`px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
+                          d === day
+                            ? "bg-blue-600 text-white shadow-lg shadow-blue-900/50"
+                            : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
                         }`}
+                      >
+                        Día {d} {dayNames[d] ? `· ${dayNames[d]}` : ""}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Edición de Nombre del Día Actual */}
+                  <div className="flex items-center gap-2 mt-1">
+                    {editingDayName ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder={`Ej: Pierna, Pecho y Tríceps...`}
+                          value={dayNameInput}
+                          onChange={(e) => setDayNameInput(e.target.value)}
+                          className="bg-gray-800 border border-blue-500 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none"
+                        />
+                        <button
+                          onClick={saveDayName}
+                          className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          onClick={() => setEditingDayName(false)}
+                          className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-xl text-xs font-bold hover:bg-gray-600 transition cursor-pointer"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setDayNameInput(dayNames[day] || "");
+                          setEditingDayName(true);
+                        }}
+                        className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1.5 cursor-pointer bg-gray-800/80 px-3 py-1.5 rounded-xl border border-gray-700/60 hover:bg-gray-700/80 transition"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        {dayNames[day] ? `Nombre: "${dayNames[day]}" (Cambiar)` : `Nombrar el Día ${day}`}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Botones de Plantillas de Semana */}
+                  <div className="flex flex-wrap gap-2 justify-center mt-2 pt-3 border-t border-gray-700/50 w-full">
+                    <button
+                      onClick={fetchWeekTemplates}
+                      className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5"
                     >
-                      Día {d}
+                      📁 Cargar Plantilla de Semana
                     </button>
-                  ))}
+                    <button
+                      onClick={() => setShowSaveTemplateModal(true)}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      💾 Guardar Semana como Plantilla
+                    </button>
+                  </div>
                 </div>
 
                 {/* Botón borrar todo del día */}
@@ -718,14 +941,30 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
                         )}
                       </div>
 
-                      {/* Lista de ejercicios */}
+                      {/* Lista de ejercicios con Drag & Drop */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                         {exGroup.map((ex) => (
                           <motion.div
                             key={ex.id}
-                            whileHover={{ scale: 1.02 }}
-                            className="relative border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-lg p-3 md:p-4"
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, ex.id)}
+                            onDragOver={(e) => handleDragOver(e, ex.id)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, ex.id)}
+                            whileHover={{ scale: 1.01 }}
+                            className={`relative border bg-gray-800/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-lg p-3 md:p-4 transition-all duration-200 ${
+                              dragOverId === ex.id
+                                ? "border-blue-500 ring-2 ring-blue-500/50 bg-blue-950/30"
+                                : "border-gray-700/50"
+                            } ${draggedId === ex.id ? "opacity-40" : "opacity-100"}`}
                           >
+                            {/* Handle para arrastrar */}
+                            <div
+                              className="absolute top-3 left-3 text-gray-500 hover:text-gray-300 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-700/50"
+                              title="Arrastra para reordenar"
+                            >
+                              <GripVertical className="w-4 h-4" />
+                            </div>
                             {editing === ex.id ? (
                               /* Modo edición - layout vertical */
                               <div className="space-y-2">
@@ -1038,6 +1277,73 @@ export default function ExercisesAdmin({ clientId: propClientId, onBack }) {
           </motion.div>
         </div>
       </div>
+      {/* Modales de Plantillas */}
+      {showTemplatesModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-3xl p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-xl font-bold text-gray-100 mb-4">Plantillas de Semana Guardadas</h3>
+            {weekTemplates.length === 0 ? (
+              <p className="text-gray-400 text-sm py-4 text-center">No tienes plantillas guardadas aún.</p>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+                {weekTemplates.map((t) => (
+                  <div
+                    key={t.id}
+                    className="flex justify-between items-center bg-gray-800 p-3 rounded-xl border border-gray-700"
+                  >
+                    <div>
+                      <p className="font-bold text-gray-200 text-sm">{t.name}</p>
+                      <p className="text-xs text-gray-400">{t.days} días de entrenamiento</p>
+                    </div>
+                    <button
+                      onClick={() => applyTemplateToClient(t)}
+                      className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white font-bold text-xs rounded-xl transition cursor-pointer"
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setShowTemplatesModal(false)}
+              className="w-full py-2.5 bg-gray-700 text-gray-300 font-bold text-xs rounded-xl hover:bg-gray-600 cursor-pointer"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showSaveTemplateModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-3xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 className="text-xl font-bold text-gray-100 mb-2">Guardar como Plantilla</h3>
+            <p className="text-xs text-gray-400 mb-4">Guarda la semana completa de ejercicios como una plantilla reutilizable.</p>
+            <input
+              type="text"
+              placeholder="Nombre (ej: Rutina Hipertrofia 5 días)"
+              value={templateNameInput}
+              onChange={(e) => setTemplateNameInput(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-600 rounded-xl p-3 text-white text-sm mb-4 focus:outline-none focus:border-blue-500"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowSaveTemplateModal(false)}
+                className="flex-1 py-2.5 bg-gray-700 text-gray-300 font-bold text-xs rounded-xl hover:bg-gray-600 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveCurrentWeekAsTemplate}
+                className="flex-1 py-2.5 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-500 cursor-pointer"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
