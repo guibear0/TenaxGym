@@ -6,7 +6,7 @@ import ClientMeasures from "../Trainer/ClientMeasures";
 import ClientWorkoutHistory from "../../../components/ClientWorkoutHistory";
 import BackButton from "../../../components/ui/BackButton";
 import { toast } from "react-hot-toast";
-import { Dumbbell, Ruler, CalendarDays } from "lucide-react";
+import { Dumbbell, Ruler, CalendarDays, Trash2 } from "lucide-react";
 
 export default function Clients() {
   const [clients, setClients] = useState([]);
@@ -125,6 +125,66 @@ export default function Clients() {
     }
   };
 
+  const confirmDeleteClient = (client) => {
+    const name = client.profiles?.name || "este cliente";
+    toast.custom(
+      (t) => (
+        <div
+          className={`${
+            t.visible ? "animate-enter" : "animate-leave"
+          } max-w-md w-full bg-gray-900 border border-red-500/60 shadow-2xl rounded-2xl p-4 flex flex-col gap-3 text-white pointer-events-auto`}
+        >
+          <div className="flex items-center gap-2">
+            <Trash2 className="w-5 h-5 text-red-400 flex-shrink-0" />
+            <span className="font-bold text-sm text-red-400">
+              ¿Eliminar cuenta de {name}?
+            </span>
+          </div>
+          <p className="text-xs text-gray-300">
+            Esta acción desasignará y eliminará el registro de {name}. ¿Deseas continuar?
+          </p>
+          <div className="flex gap-2 justify-end mt-1">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-xl text-xs font-bold text-gray-300 transition cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                await deleteClientAccount(client.id_cliente, name);
+              }}
+              className="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-xl text-xs font-bold text-white transition cursor-pointer shadow-md shadow-red-900/50"
+            >
+              Sí, eliminar
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 8000 }
+    );
+  };
+
+  const deleteClientAccount = async (clientId, clientName) => {
+    try {
+      const { error: clienteErr } = await supabase
+        .from("clientes")
+        .delete()
+        .eq("id_cliente", clientId);
+      if (clienteErr) throw clienteErr;
+
+      try {
+        await supabase.from("profiles").delete().eq("id", clientId);
+      } catch (_) {}
+
+      setClients((prev) => prev.filter((c) => c.id_cliente !== clientId));
+      toast.success(`Cuenta de ${clientName} eliminada correctamente`);
+    } catch (err) {
+      toast.error("Error al eliminar cliente: " + err.message);
+    }
+  };
+
   const assignedClients = clients.filter((c) => c.trainer_id === trainerId);
   const unassignedClients = clients.filter((c) => c.trainer_id !== trainerId);
 
@@ -185,26 +245,39 @@ export default function Clients() {
                         className="relative border border-green-500 bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl p-6 flex flex-col justify-between"
                       >
                         <div className="absolute inset-0 bg-gradient-to-br from-green-900/30 to-transparent opacity-50 rounded-2xl"></div>
-                        <div
-                          className="relative z-10 cursor-pointer"
-                          onClick={() => handleSelectClient(client, "exercises")}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ")
-                              handleSelectClient(client, "exercises");
-                          }}
-                          aria-label={`View details for ${client.profiles.name}`}
-                        >
-                          <p className="font-semibold text-lg text-gray-100">
-                            {client.profiles.name}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            {client.profiles.email}
-                          </p>
-                          <span className="text-green-400 font-medium mt-3 block">
-                            Asignado
-                          </span>
+                        <div className="flex justify-between items-start">
+                          <div
+                            className="relative z-10 cursor-pointer flex-1"
+                            onClick={() => handleSelectClient(client, "exercises")}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ")
+                                handleSelectClient(client, "exercises");
+                            }}
+                            aria-label={`View details for ${client.profiles.name}`}
+                          >
+                            <p className="font-semibold text-lg text-gray-100">
+                              {client.profiles.name}
+                            </p>
+                            <p className="text-sm text-gray-400">
+                              {client.profiles.email}
+                            </p>
+                            <span className="text-green-400 font-medium mt-1.5 block text-xs">
+                              Asignado
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              confirmDeleteClient(client);
+                            }}
+                            className="relative z-10 p-2 rounded-xl bg-red-950/40 border border-red-500/30 text-red-400 hover:text-red-300 hover:bg-red-900/60 transition cursor-pointer active:scale-95 ml-2"
+                            title={`Eliminar cuenta de ${client.profiles.name}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
 
                         {/* Días de entrenamiento */}
@@ -299,7 +372,7 @@ export default function Clients() {
                             variants={listItemVariants}
                             className="relative border border-gray-700/50 bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl p-6 flex justify-between items-center"
                           >
-                            <div>
+                             <div>
                               <p className="font-semibold text-lg text-gray-100">
                                 {client.profiles.name}
                               </p>
@@ -307,12 +380,24 @@ export default function Clients() {
                                 {client.profiles.email}
                               </p>
                             </div>
-                            <button
-                              onClick={() => assignClient(client.id_cliente)}
-                              className="relative z-10 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-all duration-200"
-                            >
-                              Asignar
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => assignClient(client.id_cliente)}
+                                className="relative z-10 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-all duration-200 text-xs font-semibold cursor-pointer"
+                              >
+                                Asignar
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  confirmDeleteClient(client);
+                                }}
+                                className="relative z-10 p-2 rounded-lg bg-red-950/40 border border-red-500/30 text-red-400 hover:text-red-300 hover:bg-red-900/60 transition cursor-pointer active:scale-95"
+                                title={`Eliminar cuenta de ${client.profiles.name}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </motion.div>
                         ))}
                   </div>

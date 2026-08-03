@@ -1,17 +1,25 @@
-//eslint-disable-next-line
 import { motion } from "framer-motion";
 import { LogOut } from "lucide-react";
 import { WorkoutNotificationBell } from "../WorkoutNotifications";
 
 export default function Navbar() {
+  const userProfile = JSON.parse(localStorage.getItem("userProfile") || "{}");
+  const isClient = userProfile?.role === "client";
+
   const handleLogout = () => {
     localStorage.removeItem("userProfile");
     window.location.href = "/login";
   };
 
   return (
-    <nav className="w-full max-w-6xl px-4 py-4 flex justify-end">
-      <WorkoutNotificationBell />
+    <nav className="w-full max-w-6xl px-4 py-4 flex items-center justify-end gap-6 sm:gap-8">
+      {/* Botón de notificaciones exclusivo para clientes con separación limpia */}
+      {isClient && (
+        <div className="flex items-center">
+          <WorkoutNotificationBell />
+        </div>
+      )}
+
       <motion.button
         onClick={handleLogout}
         whileHover={{ scale: 1.05 }}
@@ -21,7 +29,7 @@ export default function Navbar() {
         title="Cerrar sesión"
       >
         <LogOut className="w-5 h-5" />
-        <span className="font-semibold">Cerrar Sesión</span>
+        <span className="font-semibold text-sm">Cerrar Sesión</span>
       </motion.button>
     </nav>
   );
